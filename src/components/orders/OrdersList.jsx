@@ -10,7 +10,7 @@ export default function OrdersList({ orders, clients, menuInventory, onCreate, o
   const [dateFilter, setDateFilter] = useState("");
   const [isCreating, setIsCreating] = useState(false);
 
-  const clientName = (id) => clients.find((c) => c.id === id)?.name || "—";
+  const clientName = (order) => clients.find((c) => c.id === order.clientId)?.name || order.customerName || "—";
 
   const filtered = orders.filter((order) => {
     const matchStatus = statusFilter === "All" || order.status === statusFilter;
@@ -18,7 +18,7 @@ export default function OrdersList({ orders, clients, menuInventory, onCreate, o
     const matchSearch =
       !search ||
       order.id.toLowerCase().includes(search.toLowerCase()) ||
-      clientName(order.clientId).toLowerCase().includes(search.toLowerCase());
+      clientName(order).toLowerCase().includes(search.toLowerCase());
     return matchStatus && matchDate && matchSearch;
   });
 
@@ -153,7 +153,7 @@ export default function OrdersList({ orders, clients, menuInventory, onCreate, o
                   return (
                     <tr key={order.id} className="hover:bg-gray-50/50 transition-colors group">
                       <td className="px-6 py-4 font-medium text-gray-900">{order.id}</td>
-                      <td className="px-6 py-4 text-gray-800">{clientName(order.clientId)}</td>
+                      <td className="px-6 py-4 text-gray-800">{clientName(order)}</td>
                       <td className="px-6 py-4 text-gray-600">{order.items.length} item(s)</td>
                       <td className="px-6 py-4 text-gray-800 font-medium">{order.requestedDate}</td>
                       <td className="px-6 py-4">

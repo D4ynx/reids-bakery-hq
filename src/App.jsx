@@ -200,6 +200,33 @@ export default function BakeryCommandCenter() {
   const cartTax = cartSubtotal * 0.05;
   const cartTotal = cartSubtotal + cartTax;
 
+  const createOrderFromSale = (sale) => {
+    const today = new Date().toISOString().slice(0, 10);
+    setOrders((prev) => [
+      {
+        id: `#${1048 + prev.length}`,
+        clientId: null,
+        customerName: sale.customerName,
+        items: sale.items.map((item) => ({
+          menuItemId: item.id,
+          name: item.name,
+          qty: item.qty,
+          unitPrice: item.price,
+        })),
+        requestedDate: today,
+        status: "Pending",
+        notes: "Placed via POS Pre-Order",
+        deliveryDate: null,
+        assignedTo: null,
+        createdAt: today,
+        deliveredAt: null,
+        paymentMethod: sale.paymentMethod,
+        amountPaid: sale.total,
+      },
+      ...prev,
+    ]);
+  };
+
   const completeSale = () => {
     const sale = {
       id: `SALE-${String(sales.length + 1).padStart(4, "0")}`,
@@ -213,6 +240,9 @@ export default function BakeryCommandCenter() {
       createdAt: new Date().toISOString(),
     };
     setSales((prev) => [sale, ...prev]);
+    if (sale.type === "Pre-Order") {
+      createOrderFromSale(sale);
+    }
     setCart([]);
     setConfirmModal({ isOpen: false, type: "", paymentMethod: "", customerName: "" });
     setReceipt(sale);
@@ -1089,6 +1119,11 @@ export default function BakeryCommandCenter() {
               </div>
               <h2 className="text-xl font-bold text-[#121212]">Sale Complete</h2>
               <p className="text-gray-500 text-sm mt-1">{receipt.id}</p>
+              {receipt.type === "Pre-Order" && (
+                <p className="text-xs font-semibold text-[#F17D0C] mt-2 bg-orange-50 rounded-full px-3 py-1 inline-block">
+                  Added to Orders — tracked through production &amp; delivery
+                </p>
+              )}
             </div>
 
             <div className="text-sm text-gray-600 space-y-1 mb-4 border-b border-dashed border-gray-300 pb-4">

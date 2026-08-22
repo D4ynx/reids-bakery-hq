@@ -165,7 +165,7 @@ export default function OrderDetail({
   const paymentStatus = getPaymentStatus(order);
   const advanceLabel = STATUS_ACTION_LABEL[order.status];
 
-  const itemName = (id) => menuInventory.find((m) => m.id === id)?.name || id;
+  const itemName = (line) => menuInventory.find((m) => m.id === line.menuItemId)?.name || line.name || line.menuItemId;
 
   return (
     <div className="max-w-6xl mx-auto animate-fadeIn pb-10 w-full">
@@ -283,8 +283,10 @@ export default function OrderDetail({
               </svg>
             </div>
             <div>
-              <p className="text-base font-bold text-[#121212]">{client ? client.name : "—"}</p>
-              <p className="text-xs text-gray-400 font-medium">{client?.contact || "No contact on file"}</p>
+              <p className="text-base font-bold text-[#121212]">{client ? client.name : order.customerName || "—"}</p>
+              <p className="text-xs text-gray-400 font-medium">
+                {client?.contact || (order.customerName ? "Walk-in / POS customer" : "No contact on file")}
+              </p>
             </div>
           </div>
         </div>
@@ -343,7 +345,7 @@ export default function OrderDetail({
                     <td className="py-4">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 bg-gray-200 rounded-md"></div>
-                        <span className="font-medium text-gray-800">{itemName(line.menuItemId)}</span>
+                        <span className="font-medium text-gray-800">{itemName(line)}</span>
                       </div>
                     </td>
                     <td className="py-4 text-center text-gray-700">{line.qty}</td>

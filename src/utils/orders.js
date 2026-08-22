@@ -10,16 +10,16 @@ export function getOrderShortfalls(order, menuInventory) {
   return order.items
     .map((line) => {
       const menuItem = menuInventory.find((m) => m.id === line.menuItemId);
-      const available = menuItem ? menuItem.qty : 0;
+      if (!menuItem) return null;
       return {
         menuItemId: line.menuItemId,
-        name: menuItem ? menuItem.name : line.menuItemId,
+        name: menuItem.name,
         requestedQty: line.qty,
-        available,
-        shortfall: Math.max(0, line.qty - available),
+        available: menuItem.qty,
+        shortfall: Math.max(0, line.qty - menuItem.qty),
       };
     })
-    .filter((line) => line.shortfall > 0);
+    .filter((line) => line && line.shortfall > 0);
 }
 
 export function hasShortfall(order, menuInventory) {
