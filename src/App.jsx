@@ -17,9 +17,11 @@ import ClientDetail from "./components/clients/ClientDetail";
 import { computeOrderTotal, PAYMENT_METHODS } from "./utils/orders";
 import ReportsDashboard from "./components/reports/ReportsDashboard";
 import EndOfDayClosing from "./components/reports/EndOfDayClosing";
+import ChamsStockLedger from "./components/chams/ChamsStockLedger";
 
 export default function BakeryCommandCenter() {
   // Navigation State
+  const [activeView, setActiveView] = useState("reids"); // "reids" | "chams"
   const [activeTab, setActiveTab] = useState("dashboard");
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [viewingOrder, setViewingOrder] = useState(null);
@@ -898,6 +900,10 @@ export default function BakeryCommandCenter() {
         isResizing ? "cursor-col-resize select-none" : ""
       }`}
     >
+      {activeView === "chams" ? (
+        <ChamsStockLedger onSwitchView={() => setActiveView("reids")} />
+      ) : (
+        <>
       {/* RESTOCK MODAL */}
       {restockModal.isOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
@@ -1245,12 +1251,16 @@ export default function BakeryCommandCenter() {
             />
           </svg>
         </button>
-        <div className="flex items-center">
+        <button
+          onClick={() => setActiveView("chams")}
+          className="flex items-center"
+          title="Switch to Chams Branch Stock Ledger"
+        >
           <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center mr-2 p-1">
             <span className="text-[#562D07] font-bold text-xs">RBC</span>
           </div>
           <h1 className="text-lg font-bold">Bakery HQ</h1>
-        </div>
+        </button>
       </div>
 
       {/* MOBILE OVERLAY */}
@@ -1275,7 +1285,11 @@ export default function BakeryCommandCenter() {
       >
         {/* Brand Area */}
         <div className="p-5 border-b border-[#F3B978]/20 flex justify-between items-center whitespace-nowrap md:h-[76px]">
-          <div className="flex items-center">
+          <button
+            onClick={() => setActiveView("chams")}
+            className="flex items-center"
+            title="Switch to Chams Branch Stock Ledger"
+          >
             <div className="w-10 h-10 bg-white rounded-full flex flex-shrink-0 items-center justify-center mr-4 p-1 shadow-inner">
               <span className="text-[#562D07] font-bold text-xs text-center leading-tight">
                 RBC
@@ -1286,7 +1300,7 @@ export default function BakeryCommandCenter() {
             <span className="text-xl font-bold opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300 ease-in-out">
               Bakery HQ
             </span>
-          </div>
+          </button>
           <button
             onClick={() => setIsMobileOpen(false)}
             className="md:hidden p-1 text-[#FDF9F3]/60 hover:text-white"
@@ -2370,6 +2384,8 @@ export default function BakeryCommandCenter() {
           />
         )}
       </main>
+        </>
+      )}
     </div>
   );
 }
