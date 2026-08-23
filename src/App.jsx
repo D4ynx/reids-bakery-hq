@@ -44,6 +44,15 @@ export default function BakeryCommandCenter() {
   // Resizable Ticket State
   const [cartWidth, setCartWidth] = useState(400);
   const [isResizing, setIsResizing] = useState(false);
+  const [windowWidth, setWindowWidth] = useState(
+    typeof window !== "undefined" ? window.innerWidth : 1024
+  );
+
+  useEffect(() => {
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   const startResizing = useCallback((e) => {
     setIsResizing(true);
@@ -1884,9 +1893,11 @@ export default function BakeryCommandCenter() {
               className="w-full bg-white border-b md:border-b-0 md:border-l border-gray-200 shadow-md md:shadow-xl flex flex-col max-h-[45vh] md:max-h-none md:h-full flex-shrink-0 z-20 relative"
               style={{
                 width:
-                  typeof window !== "undefined" && window.innerWidth >= 768
-                    ? cartWidth
-                    : "100%",
+                  windowWidth < 768
+                    ? "100%"
+                    : windowWidth < 1024
+                    ? 260
+                    : cartWidth,
               }}
             >
               <div
