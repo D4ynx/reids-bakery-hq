@@ -15,6 +15,8 @@ import OrderDetail from "./components/orders/OrderDetail";
 import ClientsList from "./components/clients/ClientsList";
 import ClientDetail from "./components/clients/ClientDetail";
 import { computeOrderTotal, PAYMENT_METHODS } from "./utils/orders";
+import ReportsDashboard from "./components/reports/ReportsDashboard";
+import EndOfDayClosing from "./components/reports/EndOfDayClosing";
 
 export default function BakeryCommandCenter() {
   // Navigation State
@@ -25,6 +27,7 @@ export default function BakeryCommandCenter() {
   const [viewingRecipe, setViewingRecipe] = useState(null);
   const [isCreatingRecipe, setIsCreatingRecipe] = useState(false);
   const [isInventoryExpanded, setIsInventoryExpanded] = useState(false);
+  const [isReportsExpanded, setIsReportsExpanded] = useState(false);
 
   // --- POS STATE & DATA ---
   const [posCategory, setPosCategory] = useState("All");
@@ -560,6 +563,10 @@ export default function BakeryCommandCenter() {
     },
   ]);
 
+  // --- EXPENSES & END-OF-DAY CLOSING (FR-8.1) ---
+  const [expenses, setExpenses] = useState([]);
+  const [dayClosings, setDayClosings] = useState([]);
+
   const pendingOrdersCount = orders.filter(
     (o) => o.status === "Pending"
   ).length;
@@ -827,6 +834,21 @@ export default function BakeryCommandCenter() {
         c.status === "pending" && c.discrepancy !== 0 ? { ...c, status: "resolved", resolution: "applied" } : c
       )
     );
+  };
+
+  const addExpense = (data) => {
+    setExpenses((prev) => [...prev, { id: `EXP-${String(prev.length + 1).padStart(4, "0")}`, ...data }]);
+  };
+
+  const deleteExpense = (id) => {
+    setExpenses((prev) => prev.filter((e) => e.id !== id));
+  };
+
+  const closeDay = (data) => {
+    setDayClosings((prev) => {
+      if (prev.some((c) => c.date === data.date)) return prev;
+      return [...prev, { id: `EOD-${String(prev.length + 1).padStart(4, "0")}`, closedAt: new Date().toISOString(), ...data }];
+    });
   };
 
   const handleOpenRestock = (category, itemId = "") => {
@@ -1535,6 +1557,68 @@ export default function BakeryCommandCenter() {
               Calendar
             </span>
           </button>
+
+          <div className="flex flex-col">
+            <button
+              onClick={() => setIsReportsExpanded(!isReportsExpanded)}
+              className={`w-full flex justify-between items-center p-3 rounded-lg font-bold transition-colors whitespace-nowrap overflow-hidden ${
+                activeTab.startsWith("reports")
+                  ? "bg-[#F3B978]/20 text-white shadow-md border-l-4 border-[#F17D0C]"
+                  : "text-[#FDF9F3]/60 hover:bg-[#F3B978]/10 hover:text-white border-l-4 border-transparent"
+              }`}
+            >
+              <div className="flex items-center">
+                <div className="flex items-center justify-center w-8 flex-shrink-0">
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                    />
+                  </svg>
+                </div>
+                <span className="ml-3 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300">
+                  Reports
+                </span>
+              </div>
+              <svg
+                className={`w-4 h-4 ml-2 transition-transform duration-200 ${
+                  isReportsExpanded ? "rotate-180" : ""
+                } opacity-100 md:opacity-0 md:group-hover:opacity-100`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+
+            {isReportsExpanded && (
+              <div className="mt-1 space-y-1 bg-[#4a2605] rounded-lg overflow-hidden transition-all shadow-inner md:hidden md:group-hover:block">
+                <button
+                  onClick={() => handleNavClick("reports-dashboard")}
+                  className={`w-full text-left pl-14 py-2.5 text-sm font-medium transition-colors ${
+                    activeTab === "reports-dashboard"
+                      ? "text-[#F17D0C] bg-[#3a1d04] border-l-2 border-[#F17D0C]"
+                      : "text-[#FDF9F3]/70 hover:text-white hover:bg-[#3a1d04] border-l-2 border-transparent"
+                  }`}
+                >
+                  Sales Dashboard
+                </button>
+                <button
+                  onClick={() => handleNavClick("reports-closing")}
+                  className={`w-full text-left pl-14 py-2.5 text-sm font-medium transition-colors ${
+                    activeTab === "reports-closing"
+                      ? "text-[#F17D0C] bg-[#3a1d04] border-l-2 border-[#F17D0C]"
+                      : "text-[#FDF9F3]/70 hover:text-white hover:bg-[#3a1d04] border-l-2 border-transparent"
+                  }`}
+                >
+                  End-of-Day Closing
+                </button>
+              </div>
+            )}
+          </div>
         </nav>
 
         {/* Bottom Logout Area */}
@@ -1743,7 +1827,7 @@ export default function BakeryCommandCenter() {
                             {order.id}
                           </td>
                           <td className="px-5 py-4 text-gray-800">
-                            {clients.find((c) => c.id === order.clientId)?.name || "—"}
+                            {clients.find((c) => c.id === order.clientId)?.name || order.customerName || "—"}
                           </td>
                           <td className="px-5 py-4">
                             <OrderStatusBadge status={order.status} />
@@ -2265,6 +2349,25 @@ export default function BakeryCommandCenter() {
               </div>
             </div>
           </div>
+        )}
+
+        {/* =========================================
+            VIEW: SALES REPORTS
+        ========================================= */}
+        {activeTab === "reports-dashboard" && <ReportsDashboard sales={sales} />}
+
+        {/* =========================================
+            VIEW: END-OF-DAY CLOSING
+        ========================================= */}
+        {activeTab === "reports-closing" && (
+          <EndOfDayClosing
+            sales={sales}
+            expenses={expenses}
+            dayClosings={dayClosings}
+            onAddExpense={addExpense}
+            onDeleteExpense={deleteExpense}
+            onCloseDay={closeDay}
+          />
         )}
       </main>
     </div>
