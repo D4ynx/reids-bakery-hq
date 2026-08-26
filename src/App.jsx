@@ -1147,7 +1147,7 @@ export default function BakeryCommandCenter() {
       {/* RECEIPT MODAL */}
       {receipt && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm px-4 print:bg-white print:static">
-          <div className="bg-white p-6 md:p-8 rounded-2xl shadow-2xl w-full max-w-sm animate-fadeIn print:shadow-none print:rounded-none">
+          <div className="print-receipt bg-white p-6 md:p-8 rounded-2xl shadow-2xl w-full max-w-sm animate-fadeIn print:shadow-none print:rounded-none">
             <div className="text-center mb-6">
               <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
                 <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
