@@ -24,6 +24,7 @@ export default function BakeryCommandCenter() {
   const [activeView, setActiveView] = useState("reids"); // "reids" | "chams"
   const [activeTab, setActiveTab] = useState("dashboard");
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [isTabletSidebarOpen, setIsTabletSidebarOpen] = useState(false);
   const [viewingOrder, setViewingOrder] = useState(null);
   const [viewingClient, setViewingClient] = useState(null);
   const [viewingRecipe, setViewingRecipe] = useState(null);
@@ -58,6 +59,18 @@ export default function BakeryCommandCenter() {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  // --- SIDEBAR RESPONSIVE HELPERS ---
+  // "Tablet" = md..lg range (768px - 1023px), same cutoff the POS cart width uses.
+  // Touch devices can't hover, so the sidebar rail toggles on click instead.
+  const isTablet = windowWidth >= 768 && windowWidth < 1024;
+  const sidebarExpanded = isTablet && isTabletSidebarOpen;
+
+  // Shared class for sidebar labels/chevrons: visible while the tablet rail is
+  // expanded (click) or on desktop hover; hidden on the collapsed tablet rail.
+  const sidebarLabelCls = sidebarExpanded
+    ? "opacity-100"
+    : "opacity-100 md:opacity-0 lg:group-hover:opacity-100";
 
   const startResizing = useCallback((e) => {
     setIsResizing(true);
@@ -584,6 +597,7 @@ export default function BakeryCommandCenter() {
     setViewingRecipe(null);
     setIsCreatingRecipe(false);
     setIsMobileOpen(false);
+    setIsTabletSidebarOpen(false);
   };
 
   const handleViewOrder = (order) => {
@@ -906,8 +920,8 @@ export default function BakeryCommandCenter() {
         <>
       {/* RESTOCK MODAL */}
       {restockModal.isOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
-          <div className="bg-white p-6 md:p-8 rounded-2xl shadow-2xl w-full max-w-sm animate-fadeIn">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="bg-white p-6 md:p-8 rounded-2xl shadow-2xl w-full max-w-sm max-h-[90vh] overflow-y-auto animate-fadeIn">
             <h2 className="text-2xl font-bold text-[#121212] mb-1">
               Restock{" "}
               {restockModal.category === "menu" ? "Menu Item" : "Ingredient"}
@@ -1028,8 +1042,8 @@ export default function BakeryCommandCenter() {
 
       {/* ORDER CONFIRMATION MODAL */}
       {confirmModal.isOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
-          <div className="bg-white p-6 md:p-8 rounded-2xl shadow-2xl w-full max-w-md animate-fadeIn">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="bg-white p-6 md:p-8 rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto animate-fadeIn">
             <div className="flex items-center gap-3 mb-2">
               <div
                 className={`w-10 h-10 rounded-full flex items-center justify-center text-white ${
@@ -1146,8 +1160,8 @@ export default function BakeryCommandCenter() {
 
       {/* RECEIPT MODAL */}
       {receipt && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm px-4 print:bg-white print:static">
-          <div className="print-receipt bg-white p-6 md:p-8 rounded-2xl shadow-2xl w-full max-w-sm animate-fadeIn print:shadow-none print:rounded-none">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 print:bg-white print:static">
+          <div className="print-receipt bg-white p-6 md:p-8 rounded-2xl shadow-2xl w-full max-w-sm max-h-[90vh] overflow-y-auto animate-fadeIn print:shadow-none print:rounded-none">
             <div className="text-center mb-6">
               <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
                 <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1271,14 +1285,28 @@ export default function BakeryCommandCenter() {
         />
       )}
 
+      {/* TABLET SIDEBAR BACKDROP — click outside the expanded rail to close it */}
+      {sidebarExpanded && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 transition-opacity"
+          onClick={() => setIsTabletSidebarOpen(false)}
+        />
+      )}
+
       {/* SIDEBAR */}
       <aside
+        onClick={(e) => {
+          if (!isTablet) return;
+          // When expanded, only bare spots toggle the rail — button taps keep working
+          if (sidebarExpanded && e.target.closest("button")) return;
+          setIsTabletSidebarOpen((prev) => !prev);
+        }}
         className={`
         fixed md:relative inset-y-0 left-0 z-50 
         transform ${
           isMobileOpen ? "translate-x-0" : "-translate-x-full"
         } md:translate-x-0 
-        w-64 md:w-20 md:hover:w-64 
+        w-64 ${sidebarExpanded ? "md:w-64" : "md:w-20"} lg:hover:w-64 
         transition-all duration-300 ease-in-out 
         bg-[#562D07] text-[#FDF9F3] flex flex-col shadow-2xl group
       `}
@@ -1297,7 +1325,9 @@ export default function BakeryCommandCenter() {
                 <span className="text-[6px]">BAKERY</span>
               </span>
             </div>
-            <span className="text-xl font-bold opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300 ease-in-out">
+            <span
+              className={`text-xl font-bold ${sidebarLabelCls} transition-opacity duration-300 ease-in-out`}
+            >
               Bakery HQ
             </span>
           </button>
@@ -1346,7 +1376,7 @@ export default function BakeryCommandCenter() {
                 />
               </svg>
             </div>
-            <span className="ml-3 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300">
+            <span className={`ml-3 ${sidebarLabelCls} transition-opacity duration-300`}>
               Dashboard
             </span>
           </button>
@@ -1364,7 +1394,7 @@ export default function BakeryCommandCenter() {
                 <path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z" />
               </svg>
             </div>
-            <span className="ml-3 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300">
+            <span className={`ml-3 ${sidebarLabelCls} transition-opacity duration-300`}>
               Point of Sale
             </span>
           </button>
@@ -1382,7 +1412,7 @@ export default function BakeryCommandCenter() {
                 <path d="M19 6h-2c0-2.8-2.2-5-5-5S7 3.2 7 6H5c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-7-3c1.7 0 3 1.3 3 3H9c0-1.7 1.3-3 3-3zm7 17H5V8h14v12zm-7-8c-1.7 0-3-1.3-3-3H7c0 2.8 2.2 5 5 5s5-2.2 5-5h-2c0 1.7-1.3 3-3 3z" />
               </svg>
             </div>
-            <span className="ml-3 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300">
+            <span className={`ml-3 ${sidebarLabelCls} transition-opacity duration-300`}>
               Orders
             </span>
           </button>
@@ -1405,14 +1435,18 @@ export default function BakeryCommandCenter() {
                 />
               </svg>
             </div>
-            <span className="ml-3 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300">
+            <span className={`ml-3 ${sidebarLabelCls} transition-opacity duration-300`}>
               Clients
             </span>
           </button>
 
           <div className="flex flex-col">
             <button
-              onClick={() => setIsInventoryExpanded(!isInventoryExpanded)}
+              onClick={() => {
+                setIsInventoryExpanded(!isInventoryExpanded);
+                // First tap on the collapsed tablet rail expands it so the submenu is visible
+                if (isTablet && !sidebarExpanded) setIsTabletSidebarOpen(true);
+              }}
               className={`w-full flex justify-between items-center p-3 rounded-lg font-bold transition-colors whitespace-nowrap overflow-hidden ${
                 activeTab.startsWith("inventory")
                   ? "bg-[#F3B978]/20 text-white shadow-md border-l-4 border-[#F17D0C]"
@@ -1429,14 +1463,14 @@ export default function BakeryCommandCenter() {
                     <path d="M21 16.5c0 .38-.21.71-.53.88l-7.9 4.44c-.16.12-.36.18-.57.18-.21 0-.41-.06-.57-.18l-7.9-4.44A.991.991 0 013 16.5v-9c0-.38.21-.71.53-.88l7.9-4.44c.16-.12.36-.18.57-.18.21 0 .41.06.57.18l7.9 4.44c.32.17.53.5.53.88v9zM12 4.15L6.04 7.5 12 10.85l5.96-3.35L12 4.15zM5 15.91l6 3.38v-6.71L5 9.21v6.7zM19 15.91v-6.7l-6 3.37v6.71l6-3.38z" />
                   </svg>
                 </div>
-                <span className="ml-3 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300">
+                <span className={`ml-3 ${sidebarLabelCls} transition-opacity duration-300`}>
                   Inventory
                 </span>
               </div>
               <svg
                 className={`w-4 h-4 ml-2 transition-transform duration-200 ${
                   isInventoryExpanded ? "rotate-180" : ""
-                } opacity-100 md:opacity-0 md:group-hover:opacity-100`}
+                } ${sidebarLabelCls}`}
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -1452,7 +1486,9 @@ export default function BakeryCommandCenter() {
 
             {isInventoryExpanded && (
               <div
-                className={`mt-1 space-y-1 bg-[#4a2605] rounded-lg overflow-hidden transition-all shadow-inner md:hidden md:group-hover:block`}
+                className={`mt-1 space-y-1 bg-[#4a2605] rounded-lg overflow-hidden transition-all shadow-inner ${
+                  sidebarExpanded ? "md:block" : "md:hidden"
+                } md:group-hover:block`}
               >
                 <button
                   onClick={() => handleNavClick("inventory-menu")}
@@ -1526,7 +1562,7 @@ export default function BakeryCommandCenter() {
                 />
               </svg>
             </div>
-            <span className="ml-3 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300">
+            <span className={`ml-3 ${sidebarLabelCls} transition-opacity duration-300`}>
               Recipes
             </span>
           </button>
@@ -1549,7 +1585,7 @@ export default function BakeryCommandCenter() {
                 />
               </svg>
             </div>
-            <span className="ml-3 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300">
+            <span className={`ml-3 ${sidebarLabelCls} transition-opacity duration-300`}>
               Production Runs
             </span>
           </button>
@@ -1567,14 +1603,18 @@ export default function BakeryCommandCenter() {
                 <path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7v-5z" />
               </svg>
             </div>
-            <span className="ml-3 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300">
+            <span className={`ml-3 ${sidebarLabelCls} transition-opacity duration-300`}>
               Calendar
             </span>
           </button>
 
           <div className="flex flex-col">
             <button
-              onClick={() => setIsReportsExpanded(!isReportsExpanded)}
+              onClick={() => {
+                setIsReportsExpanded(!isReportsExpanded);
+                // First tap on the collapsed tablet rail expands it so the submenu is visible
+                if (isTablet && !sidebarExpanded) setIsTabletSidebarOpen(true);
+              }}
               className={`w-full flex justify-between items-center p-3 rounded-lg font-bold transition-colors whitespace-nowrap overflow-hidden ${
                 activeTab.startsWith("reports")
                   ? "bg-[#F3B978]/20 text-white shadow-md border-l-4 border-[#F17D0C]"
@@ -1592,14 +1632,14 @@ export default function BakeryCommandCenter() {
                     />
                   </svg>
                 </div>
-                <span className="ml-3 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300">
+                <span className={`ml-3 ${sidebarLabelCls} transition-opacity duration-300`}>
                   Reports
                 </span>
               </div>
               <svg
                 className={`w-4 h-4 ml-2 transition-transform duration-200 ${
                   isReportsExpanded ? "rotate-180" : ""
-                } opacity-100 md:opacity-0 md:group-hover:opacity-100`}
+                } ${sidebarLabelCls}`}
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -1609,7 +1649,11 @@ export default function BakeryCommandCenter() {
             </button>
 
             {isReportsExpanded && (
-              <div className="mt-1 space-y-1 bg-[#4a2605] rounded-lg overflow-hidden transition-all shadow-inner md:hidden md:group-hover:block">
+              <div
+                className={`mt-1 space-y-1 bg-[#4a2605] rounded-lg overflow-hidden transition-all shadow-inner ${
+                  sidebarExpanded ? "md:block" : "md:hidden"
+                } md:group-hover:block`}
+              >
                 <button
                   onClick={() => handleNavClick("reports-dashboard")}
                   className={`w-full text-left pl-14 py-2.5 text-sm font-medium transition-colors ${
@@ -1653,7 +1697,7 @@ export default function BakeryCommandCenter() {
                 />
               </svg>
             </div>
-            <span className="ml-3 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300">
+            <span className={`ml-3 ${sidebarLabelCls} transition-opacity duration-300`}>
               Log Out
             </span>
           </button>

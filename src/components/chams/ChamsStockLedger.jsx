@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import LedgerView from "./LedgerView";
 import BeginningInventoryForm from "./BeginningInventoryForm";
 import MovementLogForm from "./MovementLogForm";
@@ -150,6 +150,17 @@ const NAV_ITEMS = [
 export default function ChamsStockLedger({ onSwitchView }) {
   const [activeChamsTab, setActiveChamsTab] = useState("ledger");
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [isTabletSidebarOpen, setIsTabletSidebarOpen] = useState(false);
+  const [windowWidth, setWindowWidth] = useState(
+    typeof window !== "undefined" ? window.innerWidth : 1024
+  );
+
+  useEffect(() => {
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   const [month, setMonth] = useState(CURRENT_MONTH);
   const [branches] = useState(INITIAL_BRANCHES);
   const [products] = useState(SIOPAO_PRODUCTS);
@@ -158,9 +169,18 @@ export default function ChamsStockLedger({ onSwitchView }) {
   const [movements, setMovements] = useState(seed.movements);
   const [counts, setCounts] = useState(seed.counts);
 
+  // "Tablet" = md..lg range (768px - 1023px). Touch can't hover, so the rail
+  // expands/collapses on click; labels stay visible while it is expanded.
+  const isTablet = windowWidth >= 768 && windowWidth < 1024;
+  const sidebarExpanded = isTablet && isTabletSidebarOpen;
+  const sidebarLabelCls = sidebarExpanded
+    ? "opacity-100"
+    : "opacity-100 md:opacity-0 lg:group-hover:opacity-100";
+
   const handleNavClick = (tab) => {
     setActiveChamsTab(tab);
     setIsMobileOpen(false);
+    setIsTabletSidebarOpen(false);
   };
 
   const upsertBeginning = (data) => {
@@ -227,12 +247,26 @@ export default function ChamsStockLedger({ onSwitchView }) {
         />
       )}
 
+      {/* TABLET SIDEBAR BACKDROP — click outside the expanded rail to close it */}
+      {sidebarExpanded && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 transition-opacity"
+          onClick={() => setIsTabletSidebarOpen(false)}
+        />
+      )}
+
       {/* SIDEBAR */}
       <aside
+        onClick={(e) => {
+          if (!isTablet) return;
+          // When expanded, only bare spots toggle the rail — button taps keep working
+          if (sidebarExpanded && e.target.closest("button")) return;
+          setIsTabletSidebarOpen((prev) => !prev);
+        }}
         className={`
         fixed md:relative inset-y-0 left-0 z-50
         transform ${isMobileOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0
-        w-64 md:w-20 md:hover:w-64
+        w-64 ${sidebarExpanded ? "md:w-64" : "md:w-20"} lg:hover:w-64
         transition-all duration-300 ease-in-out
         bg-[#1B2A4A] text-[#EAF0FB] flex flex-col shadow-2xl group
       `}
@@ -246,7 +280,9 @@ export default function ChamsStockLedger({ onSwitchView }) {
                 <span className="text-[6px]">CHAMS</span>
               </span>
             </div>
-            <span className="text-xl font-bold opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300 ease-in-out">
+            <span
+              className={`text-xl font-bold ${sidebarLabelCls} transition-opacity duration-300 ease-in-out`}
+            >
               Chams Ledger
             </span>
           </button>
@@ -276,7 +312,9 @@ export default function ChamsStockLedger({ onSwitchView }) {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={item.path} />
                 </svg>
               </div>
-              <span className="ml-3 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300 text-left">
+              <span
+                className={`ml-3 ${sidebarLabelCls} transition-opacity duration-300 text-left`}
+              >
                 {item.label}
               </span>
             </button>
@@ -293,7 +331,7 @@ export default function ChamsStockLedger({ onSwitchView }) {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
               </svg>
             </div>
-            <span className="ml-3 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300">
+            <span className={`ml-3 ${sidebarLabelCls} transition-opacity duration-300`}>
               Back to Bakery HQ
             </span>
           </button>
