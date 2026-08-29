@@ -266,7 +266,7 @@ export default function ChamsStockLedger({ onSwitchView }) {
         className={`
         fixed md:relative inset-y-0 left-0 z-50
         transform ${isMobileOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0
-        w-64 ${sidebarExpanded ? "md:w-64" : "md:w-20"} lg:hover:w-64
+        w-72 ${sidebarExpanded ? "md:w-72" : "md:w-20"} lg:hover:w-72
         transition-all duration-300 ease-in-out
         bg-[#1B2A4A] text-[#EAF0FB] flex flex-col shadow-2xl group
       `}
@@ -281,7 +281,7 @@ export default function ChamsStockLedger({ onSwitchView }) {
               </span>
             </div>
             <span
-              className={`text-xl font-bold ${sidebarLabelCls} transition-opacity duration-300 ease-in-out`}
+              className={`text-xl font-bold truncate ${sidebarLabelCls} transition-opacity duration-300 ease-in-out`}
             >
               Chams Ledger
             </span>
@@ -313,7 +313,7 @@ export default function ChamsStockLedger({ onSwitchView }) {
                 </svg>
               </div>
               <span
-                className={`ml-3 ${sidebarLabelCls} transition-opacity duration-300 text-left`}
+                className={`ml-3 truncate ${sidebarLabelCls} transition-opacity duration-300 text-left`}
               >
                 {item.label}
               </span>
@@ -331,7 +331,7 @@ export default function ChamsStockLedger({ onSwitchView }) {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
               </svg>
             </div>
-            <span className={`ml-3 ${sidebarLabelCls} transition-opacity duration-300`}>
+            <span className={`ml-3 truncate ${sidebarLabelCls} transition-opacity duration-300`}>
               Back to Bakery HQ
             </span>
           </button>
