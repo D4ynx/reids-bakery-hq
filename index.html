@@ -11,10 +11,6 @@
     <link rel="icon" href="/favicon.ico" />
     <title>RBC Prototype</title>
     <style>
-      /* Print-only sales log report (Reports > Sales Dashboard > Sales Log card) */
-      .print-sales-log {
-        display: none;
-      }
       @media print {
         body * {
           visibility: hidden;
@@ -32,21 +28,6 @@
           min-height: 100vh;
           margin: 0 !important;
           padding: 2rem !important;
-          box-shadow: none !important;
-        }
-        .print-sales-log,
-        .print-sales-log * {
-          visibility: visible;
-        }
-        .print-sales-log {
-          display: block !important;
-          position: absolute !important;
-          top: 0 !important;
-          left: 0 !important;
-          width: 100% !important;
-          margin: 0 !important;
-          padding: 1rem !important;
-          background: #ffffff !important;
           box-shadow: none !important;
         }
       }

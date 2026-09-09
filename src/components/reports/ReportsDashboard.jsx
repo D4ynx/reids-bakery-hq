@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import RevenueByDayChart from "./RevenueByDayChart";
 import SellerBarList from "./SellerBarList";
 import {
@@ -27,8 +27,6 @@ export default function ReportsDashboard({ sales, onReprintSale }) {
   const [preset, setPreset] = useState("month");
   const [customStart, setCustomStart] = useState("");
   const [customEnd, setCustomEnd] = useState("");
-  // When set, a print-only "Sales Log Report" is rendered and window.print() is triggered.
-  const [printTicket, setPrintTicket] = useState(null);
 
   const range = useMemo(() => {
     if (preset === "custom") return { start: customStart, end: customEnd };
@@ -51,23 +49,7 @@ export default function ReportsDashboard({ sales, onReprintSale }) {
     downloadCSV(`sales-report-${label}.csv`, csv);
   };
 
-  const rangeLabel =
-    preset === "custom"
-      ? `${customStart || "Start"} to ${customEnd || "End"}`
-      : DATE_PRESETS.find((p) => p.id === preset)?.label || "All Time";
-
-  const handlePrintLog = () => setPrintTicket(Date.now());
-
-  useEffect(() => {
-    if (printTicket === null) return undefined;
-    const handleAfterPrint = () => setPrintTicket(null);
-    window.addEventListener("afterprint", handleAfterPrint);
-    window.print();
-    return () => window.removeEventListener("afterprint", handleAfterPrint);
-  }, [printTicket]);
-
   return (
-    <>
     <div className="max-w-6xl mx-auto animate-fadeIn pb-10 w-full">
       <header className="mb-6 md:mb-8 flex flex-col md:flex-row md:justify-between md:items-end gap-4">
         <div>
@@ -170,23 +152,8 @@ export default function ReportsDashboard({ sales, onReprintSale }) {
       </div>
 
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-        <div className="p-5 border-b border-gray-100 flex flex-wrap items-center justify-between gap-3">
+        <div className="p-5 border-b border-gray-100">
           <h3 className="text-lg font-bold text-[#121212]">Sales Log</h3>
-          <button
-            onClick={handlePrintLog}
-            disabled={filteredSales.length === 0}
-            className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed font-bold text-sm transition-colors whitespace-nowrap flex items-center gap-2"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"
-              />
-            </svg>
-            Print Log
-          </button>
         </div>
         <div className="overflow-x-auto w-full">
           <table className="w-full text-left border-collapse min-w-[760px]">
@@ -241,95 +208,5 @@ export default function ReportsDashboard({ sales, onReprintSale }) {
         </div>
       </div>
     </div>
-
-      {/* PRINT-ONLY: formatted Sales Log report (shown only in print output) */}
-      {printTicket !== null && (
-        <div className="print-sales-log">
-          <div style={{ fontFamily: "Arial, Helvetica, sans-serif", color: "#111111" }}>
-            <div style={{ textAlign: "center", marginBottom: "16px" }}>
-              <h1 style={{ fontSize: "20px", fontWeight: "700", margin: "0" }}>Reid&apos;s Bakery HQ</h1>
-              <h2 style={{ fontSize: "15px", fontWeight: "600", margin: "2px 0 0" }}>Sales Log Report</h2>
-              <p style={{ fontSize: "11px", margin: "4px 0 0", color: "#444444" }}>
-                Period: {rangeLabel} &nbsp;|&nbsp; Generated: {new Date().toLocaleString()}
-              </p>
-            </div>
-
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                flexWrap: "wrap",
-                gap: "8px",
-                fontSize: "11px",
-                borderTop: "2px solid #111111",
-                borderBottom: "1px solid #111111",
-                padding: "6px 0",
-                marginBottom: "10px",
-              }}
-            >
-              <span>
-                Transactions: <strong>{summary.totalTransactions}</strong>
-              </span>
-              <span>
-                Revenue: <strong>₱{summary.totalRevenue.toFixed(2)}</strong>
-              </span>
-              <span>Tax: ₱{summary.totalTax.toFixed(2)}</span>
-              <span>Avg. Ticket: ₱{summary.avgTicket.toFixed(2)}</span>
-            </div>
-
-            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "11px" }}>
-              <thead>
-                <tr style={{ borderBottom: "1px solid #111111" }}>
-                  <th style={{ padding: "4px 6px", textAlign: "left" }}>Sale ID</th>
-                  <th style={{ padding: "4px 6px", textAlign: "left" }}>Date</th>
-                  <th style={{ padding: "4px 6px", textAlign: "left" }}>Type</th>
-                  <th style={{ padding: "4px 6px", textAlign: "left" }}>Customer</th>
-                  <th style={{ padding: "4px 6px", textAlign: "left" }}>Payment</th>
-                  <th style={{ padding: "4px 6px", textAlign: "left" }}>Items</th>
-                  <th style={{ padding: "4px 6px", textAlign: "right" }}>Subtotal</th>
-                  <th style={{ padding: "4px 6px", textAlign: "right" }}>Tax</th>
-                  <th style={{ padding: "4px 6px", textAlign: "right" }}>Total</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredSales.map((sale) => (
-                  <tr key={sale.id} style={{ borderBottom: "1px solid #dddddd" }}>
-                    <td style={{ padding: "4px 6px", whiteSpace: "nowrap" }}>{sale.id}</td>
-                    <td style={{ padding: "4px 6px", whiteSpace: "nowrap" }}>
-                      {new Date(sale.createdAt).toLocaleString()}
-                    </td>
-                    <td style={{ padding: "4px 6px" }}>{sale.type}</td>
-                    <td style={{ padding: "4px 6px" }}>{sale.customerName}</td>
-                    <td style={{ padding: "4px 6px" }}>{sale.paymentMethod}</td>
-                    <td style={{ padding: "4px 6px" }}>
-                      {sale.items.map((item) => `${item.qty}x ${item.name}`).join(", ")}
-                    </td>
-                    <td style={{ padding: "4px 6px", textAlign: "right" }}>{sale.subtotal.toFixed(2)}</td>
-                    <td style={{ padding: "4px 6px", textAlign: "right" }}>{sale.tax.toFixed(2)}</td>
-                    <td style={{ padding: "4px 6px", textAlign: "right", fontWeight: "600" }}>
-                      ₱{sale.total.toFixed(2)}
-                    </td>
-                  </tr>
-                ))}
-                <tr style={{ borderTop: "2px solid #111111" }}>
-                  <td colSpan={6} style={{ padding: "4px 6px", textAlign: "right", fontWeight: "700" }}>
-                    TOTAL ({summary.totalTransactions} {summary.totalTransactions === 1 ? "sale" : "sales"})
-                  </td>
-                  <td style={{ padding: "4px 6px", textAlign: "right", fontWeight: "700" }}>
-                    ₱{filteredSales.reduce((sum, s) => sum + s.subtotal, 0).toFixed(2)}
-                  </td>
-                  <td style={{ padding: "4px 6px", textAlign: "right", fontWeight: "700" }}>
-                    ₱{summary.totalTax.toFixed(2)}
-                  </td>
-                  <td style={{ padding: "4px 6px", textAlign: "right", fontWeight: "700" }}>
-                    ₱{summary.totalRevenue.toFixed(2)}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-    </>
   );
 }
