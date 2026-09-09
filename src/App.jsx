@@ -35,7 +35,14 @@ export default function BakeryCommandCenter() {
   // --- POS STATE & DATA ---
   const [posCategory, setPosCategory] = useState("All");
   const [cart, setCart] = useState([]);
-  const [confirmModal, setConfirmModal] = useState({ isOpen: false, type: "", paymentMethod: "", customerName: "", deliveryDate: "" });
+  const [confirmModal, setConfirmModal] = useState({
+    isOpen: false,
+    paymentMethod: "",
+    customerName: "",
+    customerContact: "",
+    deliveryDate: "",
+    notes: "",
+  });
   const [sales, setSales] = useState([]);
   const [receipt, setReceipt] = useState(null);
 
@@ -243,7 +250,9 @@ export default function BakeryCommandCenter() {
         })),
         requestedDate: today,
         status: "Pending",
-        notes: "Placed via POS Pre-Order",
+        notes: sale.notes
+          ? `Placed via POS Pre-Order — ${sale.notes}`
+          : "Placed via POS Pre-Order",
         deliveryDate: sale.deliveryDate,
         assignedTo: null,
         createdAt: today,
@@ -262,12 +271,14 @@ export default function BakeryCommandCenter() {
       id: `SALE-${String(sales.length + 1).padStart(4, "0")}`,
       type: isPreOrder ? "Pre-Order" : "Walk-in",
       customerName: confirmModal.customerName.trim(),
+      customerContact: confirmModal.customerContact.trim(),
       paymentMethod: confirmModal.paymentMethod,
       items: cart,
       subtotal: cartSubtotal,
       tax: cartTax,
       total: cartTotal,
       deliveryDate: confirmModal.deliveryDate || todayISO,
+      notes: confirmModal.notes.trim(),
       createdAt: new Date().toISOString(),
     };
     setSales((prev) => [sale, ...prev]);
@@ -275,7 +286,14 @@ export default function BakeryCommandCenter() {
       createOrderFromSale(sale);
     }
     setCart([]);
-    setConfirmModal({ isOpen: false, type: "", paymentMethod: "", customerName: "", deliveryDate: "" });
+    setConfirmModal({
+      isOpen: false,
+      paymentMethod: "",
+      customerName: "",
+      customerContact: "",
+      deliveryDate: "",
+      notes: "",
+    });
     setReceipt(sale);
   };
 
@@ -1065,7 +1083,7 @@ export default function BakeryCommandCenter() {
                 </svg>
               </div>
               <h2 className="text-2xl font-bold text-[#121212]">
-                Confirm {confirmModal.type}
+                Confirm Order
               </h2>
             </div>
             <p className="text-gray-500 text-sm mb-6 ml-13">
@@ -1096,19 +1114,35 @@ export default function BakeryCommandCenter() {
               <span className="text-[#F17D0C]">₱{cartTotal.toFixed(2)}</span>
             </div>
 
-            <div className="mb-6">
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Customer Name
-              </label>
-              <input
-                type="text"
-                placeholder="Enter customer name..."
-                value={confirmModal.customerName}
-                onChange={(e) =>
-                  setConfirmModal((prev) => ({ ...prev, customerName: e.target.value }))
-                }
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F17D0C] focus:border-[#F17D0C] outline-none text-gray-800"
-              />
+            <div className="mb-6 grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Customer Name
+                </label>
+                <input
+                  type="text"
+                  placeholder="Enter customer name..."
+                  value={confirmModal.customerName}
+                  onChange={(e) =>
+                    setConfirmModal((prev) => ({ ...prev, customerName: e.target.value }))
+                  }
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F17D0C] focus:border-[#F17D0C] outline-none text-gray-800"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Customer Contact
+                </label>
+                <input
+                  type="tel"
+                  placeholder="09XX XXX XXXX"
+                  value={confirmModal.customerContact}
+                  onChange={(e) =>
+                    setConfirmModal((prev) => ({ ...prev, customerContact: e.target.value }))
+                  }
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F17D0C] focus:border-[#F17D0C] outline-none text-gray-800"
+                />
+              </div>
             </div>
 
             <div className="mb-6">
@@ -1151,9 +1185,33 @@ export default function BakeryCommandCenter() {
               </div>
             </div>
 
+            <div className="mb-8">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Notes on Order
+              </label>
+              <textarea
+                rows={2}
+                placeholder="Special instructions, allergies, packaging..."
+                value={confirmModal.notes}
+                onChange={(e) =>
+                  setConfirmModal((prev) => ({ ...prev, notes: e.target.value }))
+                }
+                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F17D0C] focus:border-[#F17D0C] outline-none text-gray-800 resize-none"
+              />
+            </div>
+
             <div className="flex gap-3">
               <button
-                onClick={() => setConfirmModal({ isOpen: false, type: "", paymentMethod: "", customerName: "", deliveryDate: "" })}
+                onClick={() =>
+                  setConfirmModal({
+                    isOpen: false,
+                    paymentMethod: "",
+                    customerName: "",
+                    customerContact: "",
+                    deliveryDate: "",
+                    notes: "",
+                  })
+                }
                 className="flex-1 py-3 rounded-xl border border-gray-300 text-gray-700 font-bold hover:bg-gray-100 transition-colors"
               >
                 Cancel
@@ -1195,13 +1253,15 @@ export default function BakeryCommandCenter() {
 
             <div className="text-sm text-gray-600 space-y-1 mb-4 border-b border-dashed border-gray-300 pb-4">
               <div className="flex justify-between">
-                <span>Type</span>
-                <span className="font-semibold text-gray-800">{receipt.type}</span>
-              </div>
-              <div className="flex justify-between">
                 <span>Customer</span>
                 <span className="font-semibold text-gray-800">{receipt.customerName}</span>
               </div>
+              {receipt.customerContact && (
+                <div className="flex justify-between">
+                  <span>Contact</span>
+                  <span className="font-semibold text-gray-800">{receipt.customerContact}</span>
+                </div>
+              )}
               <div className="flex justify-between">
                 <span>Payment Method</span>
                 <span className="font-semibold text-gray-800">{receipt.paymentMethod}</span>
@@ -1247,6 +1307,14 @@ export default function BakeryCommandCenter() {
                 <span>Total</span>
                 <span className="text-[#F17D0C]">₱{receipt.total.toFixed(2)}</span>
               </div>
+              {receipt.notes && (
+                <div className="flex justify-between text-sm pt-1">
+                  <span className="text-gray-500">Notes</span>
+                  <span className="font-semibold text-gray-800 text-right max-w-[60%]">
+                    {receipt.notes}
+                  </span>
+                </div>
+              )}
             </div>
 
             <div className="flex gap-3 print:hidden">
@@ -2212,10 +2280,11 @@ export default function BakeryCommandCenter() {
                   onClick={() =>
                     setConfirmModal({
                       isOpen: true,
-                      type: "Order",
                       paymentMethod: "",
                       customerName: "",
+                      customerContact: "",
                       deliveryDate: todayISO,
+                      notes: "",
                     })
                   }
                   className={`w-full py-3 md:py-4 rounded-xl text-sm md:text-base font-bold shadow-lg transition-all transform active:scale-[0.98] ${
