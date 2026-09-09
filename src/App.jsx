@@ -17,6 +17,7 @@ import ClientDetail from "./components/clients/ClientDetail";
 import { computeOrderTotal, PAYMENT_METHODS } from "./utils/orders";
 import ReportsDashboard from "./components/reports/ReportsDashboard";
 import EndOfDayClosing from "./components/reports/EndOfDayClosing";
+import ClosingInventory from "./components/reports/ClosingInventory";
 import ChamsStockLedger from "./components/chams/ChamsStockLedger";
 
 export default function BakeryCommandCenter() {
@@ -1764,6 +1765,16 @@ export default function BakeryCommandCenter() {
                 >
                   End-of-Day Closing
                 </button>
+                <button
+                  onClick={() => handleNavClick("reports-inventory")}
+                  className={`w-full text-left pl-14 py-2.5 text-sm font-medium transition-colors ${
+                    activeTab === "reports-inventory"
+                      ? "text-[#F17D0C] bg-[#3a1d04] border-l-2 border-[#F17D0C]"
+                      : "text-[#FDF9F3]/70 hover:text-white hover:bg-[#3a1d04] border-l-2 border-transparent"
+                  }`}
+                >
+                  Closing Inventory
+                </button>
               </div>
             )}
           </div>
@@ -2507,6 +2518,17 @@ export default function BakeryCommandCenter() {
             onAddExpense={addExpense}
             onDeleteExpense={deleteExpense}
             onCloseDay={closeDay}
+          />
+        )}
+
+        {/* =========================================
+            VIEW: CLOSING INVENTORY REPORT
+        ========================================= */}
+        {activeTab === "reports-inventory" && (
+          <ClosingInventory
+            menuInventory={menuInventory}
+            ingredients={ingredients}
+            inventoryCounts={inventoryCounts}
           />
         )}
       </main>
