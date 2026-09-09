@@ -2372,7 +2372,8 @@ export default function BakeryCommandCenter() {
         {activeTab === "inventory-menu" && (
           <FinishedGoodsTable
             menuInventory={menuInventory}
-            onRestock={(id) => handleOpenRestock("menu", id)}
+            // Restock routes to Production Runs — replenish finished goods by scheduling a run
+            onRestock={goToProductionRuns}
           />
         )}
 
