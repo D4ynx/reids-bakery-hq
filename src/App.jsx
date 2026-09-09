@@ -1065,7 +1065,21 @@ export default function BakeryCommandCenter() {
 
       {/* ORDER CONFIRMATION MODAL */}
       {confirmModal.isOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setConfirmModal({
+                isOpen: false,
+                paymentMethod: "",
+                customerName: "",
+                customerContact: "",
+                deliveryDate: "",
+                notes: "",
+              });
+            }
+          }}
+        >
           <div className="bg-white p-6 md:p-8 rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto animate-fadeIn">
             <div className="flex items-center gap-3 mb-2">
               <div className="w-10 h-10 rounded-full flex items-center justify-center text-white bg-[#F17D0C]">
@@ -1235,7 +1249,14 @@ export default function BakeryCommandCenter() {
 
       {/* RECEIPT MODAL */}
       {receipt && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 print:bg-white print:static">
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 print:bg-white print:static"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setReceipt(null);
+            }
+          }}
+        >
           <div className="print-receipt bg-white p-6 md:p-8 rounded-2xl shadow-2xl w-full max-w-sm max-h-[90vh] overflow-y-auto animate-fadeIn print:shadow-none print:rounded-none">
             <div className="text-center mb-6">
               <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
@@ -1304,7 +1325,11 @@ export default function BakeryCommandCenter() {
                 <span>Tax (5%)</span>
                 <span>₱{receipt.tax.toFixed(2)}</span>
               </div>
-              <div className="flex justify-between text-lg font-bold text-[#121212] pt-1">
+              <div
+                className={`flex justify-between text-lg font-bold text-[#121212] pt-1 ${
+                  receipt.notes ? "pb-3 border-b border-dashed border-gray-300" : ""
+                }`}
+              >
                 <span>Total</span>
                 <span className="text-[#F17D0C]">₱{receipt.total.toFixed(2)}</span>
               </div>
