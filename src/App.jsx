@@ -2506,7 +2506,7 @@ export default function BakeryCommandCenter() {
         {/* =========================================
             VIEW: SALES REPORTS
         ========================================= */}
-        {activeTab === "reports-dashboard" && <ReportsDashboard sales={sales} />}
+        {activeTab === "reports-dashboard" && <ReportsDashboard sales={sales} onReprintSale={setReceipt} />}
 
         {/* =========================================
             VIEW: END-OF-DAY CLOSING
