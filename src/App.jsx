@@ -14,12 +14,15 @@ import OrdersList from "./components/orders/OrdersList";
 import OrderDetail from "./components/orders/OrderDetail";
 import ClientsList from "./components/clients/ClientsList";
 import ClientDetail from "./components/clients/ClientDetail";
-import { computeOrderTotal, PAYMENT_METHODS } from "./utils/orders";
+import { computeOrderTotal } from "./utils/orders";
 import ReportsDashboard from "./components/reports/ReportsDashboard";
 import EndOfDayClosing from "./components/reports/EndOfDayClosing";
 import ClosingInventory from "./components/reports/ClosingInventory";
 import ChamsStockLedger from "./components/chams/ChamsStockLedger";
 import Sidebar from "./components/layout/Sidebar";
+import OrderConfirmationModal from "./components/pos/OrderConfirmationModal";
+import ReceiptModal from "./components/pos/ReceiptModal";
+import RestockModal from "./components/inventory/RestockModal";
 
 export default function BakeryCommandCenter() {
   // Navigation State
@@ -285,6 +288,21 @@ export default function BakeryCommandCenter() {
       notes: "",
     });
     setReceipt(sale);
+  };
+
+  const updateConfirmField = (field, value) => {
+    setConfirmModal((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const closeConfirmModal = () => {
+    setConfirmModal({
+      isOpen: false,
+      paymentMethod: "",
+      customerName: "",
+      customerContact: "",
+      deliveryDate: "",
+      notes: "",
+    });
   };
 
   // --- CLIENTS (FR-5.1) ---
@@ -920,6 +938,37 @@ export default function BakeryCommandCenter() {
     });
   };
 
+  const handleRestockItemChange = (itemId) => {
+    setRestockModal({ ...restockModal, selectedItemId: itemId });
+  };
+
+  const handleRestockAmountChange = (amount) => {
+    setRestockModal({ ...restockModal, amountToAdd: amount });
+  };
+
+  const handleRestockQuickAdd = (delta) => {
+    setRestockModal({
+      ...restockModal,
+      amountToAdd: (parseInt(restockModal.amountToAdd || 0) + delta).toString(),
+    });
+  };
+
+  const closeRestockModal = () => {
+    setRestockModal({
+      isOpen: false,
+      category: "menu",
+      selectedItemId: "",
+      amountToAdd: "",
+    });
+  };
+
+  const restockItems =
+    restockModal.category === "menu" ? menuInventory : ingredients;
+  const isRestockConfirmDisabled =
+    !restockModal.amountToAdd || parseInt(restockModal.amountToAdd) <= 0;
+  const isConfirmOrderDisabled =
+    !confirmModal.paymentMethod || !confirmModal.customerName.trim();
+
   return (
     <div
       className={`flex flex-col md:flex-row h-screen bg-[#FDF9F3] font-sans text-[#121212] overflow-hidden relative ${
@@ -930,424 +979,37 @@ export default function BakeryCommandCenter() {
         <ChamsStockLedger onSwitchView={() => setActiveView("reids")} />
       ) : (
         <>
-      {/* RESTOCK MODAL */}
+      {/* RESTOCK MODAL (extracted to src/components/inventory/RestockModal.jsx) */}
       {restockModal.isOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="bg-white p-6 md:p-8 rounded-2xl shadow-2xl w-full max-w-sm max-h-[90vh] overflow-y-auto animate-fadeIn">
-            <h2 className="text-2xl font-bold text-[#121212] mb-1">
-              Restock{" "}
-              {restockModal.category === "menu" ? "Menu Item" : "Ingredient"}
-            </h2>
-            <p className="text-gray-500 text-sm mb-6">
-              Select an item and add the received stock amount.
-            </p>
-
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">
-                  Item to Restock
-                </label>
-                <select
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F17D0C] focus:border-[#F17D0C] outline-none text-gray-800"
-                  value={restockModal.selectedItemId}
-                  onChange={(e) =>
-                    setRestockModal({
-                      ...restockModal,
-                      selectedItemId: e.target.value,
-                    })
-                  }
-                >
-                  {(restockModal.category === "menu"
-                    ? menuInventory
-                    : ingredients
-                  ).map((item) => (
-                    <option key={item.id} value={item.id}>
-                      {item.name} (Current: {item.qty})
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">
-                  Quantity to Add
-                </label>
-                <input
-                  type="number"
-                  min="1"
-                  placeholder="Enter amount..."
-                  value={restockModal.amountToAdd}
-                  onChange={(e) =>
-                    setRestockModal({
-                      ...restockModal,
-                      amountToAdd: e.target.value,
-                    })
-                  }
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F17D0C] focus:border-[#F17D0C] outline-none text-gray-800"
-                />
-              </div>
-
-              {/* Quick Increment Buttons */}
-              <div className="flex gap-2">
-                <button
-                  onClick={() =>
-                    setRestockModal({
-                      ...restockModal,
-                      amountToAdd: (
-                        parseInt(restockModal.amountToAdd || 0) + 5
-                      ).toString(),
-                    })
-                  }
-                  className="flex-1 py-2 bg-orange-50 text-[#F17D0C] font-bold rounded-lg border border-orange-200 hover:bg-orange-100 transition-colors"
-                >
-                  + 5
-                </button>
-                <button
-                  onClick={() =>
-                    setRestockModal({
-                      ...restockModal,
-                      amountToAdd: (
-                        parseInt(restockModal.amountToAdd || 0) + 10
-                      ).toString(),
-                    })
-                  }
-                  className="flex-1 py-2 bg-orange-50 text-[#F17D0C] font-bold rounded-lg border border-orange-200 hover:bg-orange-100 transition-colors"
-                >
-                  + 10
-                </button>
-              </div>
-            </div>
-
-            <div className="flex gap-3 mt-8">
-              <button
-                onClick={() =>
-                  setRestockModal({
-                    isOpen: false,
-                    category: "menu",
-                    selectedItemId: "",
-                    amountToAdd: "",
-                  })
-                }
-                className="flex-1 py-3 rounded-xl border border-gray-300 text-gray-700 font-bold hover:bg-gray-100 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={submitRestock}
-                disabled={
-                  !restockModal.amountToAdd ||
-                  parseInt(restockModal.amountToAdd) <= 0
-                }
-                className={`flex-1 py-3 rounded-xl text-white font-bold transition-colors ${
-                  !restockModal.amountToAdd ||
-                  parseInt(restockModal.amountToAdd) <= 0
-                    ? "bg-gray-300 cursor-not-allowed"
-                    : "bg-[#562D07] hover:bg-[#3a1d04]"
-                }`}
-              >
-                Confirm Restock
-              </button>
-            </div>
-          </div>
-        </div>
+        <RestockModal
+          modal={restockModal}
+          items={restockItems}
+          onItemChange={handleRestockItemChange}
+          onAmountChange={handleRestockAmountChange}
+          onQuickAdd={handleRestockQuickAdd}
+          onClose={closeRestockModal}
+          onConfirm={submitRestock}
+          disabled={isRestockConfirmDisabled}
+        />
       )}
 
-      {/* ORDER CONFIRMATION MODAL */}
+      {/* ORDER CONFIRMATION MODAL (extracted to src/components/pos/OrderConfirmationModal.jsx) */}
       {confirmModal.isOpen && (
-        <div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) {
-              setConfirmModal({
-                isOpen: false,
-                paymentMethod: "",
-                customerName: "",
-                customerContact: "",
-                deliveryDate: "",
-                notes: "",
-              });
-            }
-          }}
-        >
-          <div className="bg-white p-6 md:p-8 rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto animate-fadeIn">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 rounded-full flex items-center justify-center text-white bg-[#F17D0C]">
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                  />
-                </svg>
-              </div>
-              <h2 className="text-2xl font-bold text-[#121212]">
-                Confirm Order
-              </h2>
-            </div>
-            <p className="text-gray-500 text-sm mb-6 ml-13">
-              Please double-check the order details below.
-            </p>
-
-            <div className="max-h-[30vh] overflow-y-auto mb-6 bg-gray-50 rounded-lg p-3 border border-gray-100">
-              <ul className="divide-y divide-gray-200">
-                {cart.map((item) => (
-                  <li
-                    key={item.id}
-                    className="py-3 flex justify-between text-sm"
-                  >
-                    <span className="font-medium text-gray-800">
-                      <span className="text-gray-500 mr-2">{item.qty}x</span>{" "}
-                      {item.name}
-                    </span>
-                    <span className="font-bold text-gray-900">
-                      ₱{(item.price * item.qty).toFixed(2)}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div className="flex justify-between items-center mb-6 text-xl font-bold text-[#121212] px-2">
-              <span>Total to Charge:</span>
-              <span className="text-[#F17D0C]">₱{cartTotal.toFixed(2)}</span>
-            </div>
-
-            <div className="mb-6 grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Customer Name
-                </label>
-                <input
-                  type="text"
-                  placeholder="Enter customer name..."
-                  value={confirmModal.customerName}
-                  onChange={(e) =>
-                    setConfirmModal((prev) => ({ ...prev, customerName: e.target.value }))
-                  }
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F17D0C] focus:border-[#F17D0C] outline-none text-gray-800"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Customer Contact
-                </label>
-                <input
-                  type="tel"
-                  placeholder="09XX XXX XXXX"
-                  value={confirmModal.customerContact}
-                  onChange={(e) =>
-                    setConfirmModal((prev) => ({ ...prev, customerContact: e.target.value }))
-                  }
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F17D0C] focus:border-[#F17D0C] outline-none text-gray-800"
-                />
-              </div>
-            </div>
-
-            <div className="mb-6">
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Delivery Date
-              </label>
-              <input
-                type="date"
-                min={todayISO}
-                value={confirmModal.deliveryDate}
-                onChange={(e) =>
-                  setConfirmModal((prev) => ({ ...prev, deliveryDate: e.target.value }))
-                }
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F17D0C] focus:border-[#F17D0C] outline-none text-gray-800"
-              />
-              <p className="text-xs text-gray-400 mt-1.5">
-                {confirmModal.deliveryDate > todayISO
-                  ? "This order will be tracked in Orders (production & delivery)."
-                  : "Set a later date to track this order in Orders."}
-              </p>
-            </div>
-
-            <div className="mb-8">
-              <p className="text-sm font-semibold text-gray-700 mb-2">Payment Method</p>
-              <div className="grid grid-cols-2 gap-2">
-                {PAYMENT_METHODS.map((method) => (
-                  <button
-                    key={method}
-                    type="button"
-                    onClick={() => setConfirmModal((prev) => ({ ...prev, paymentMethod: method }))}
-                    className={`py-2.5 rounded-lg border text-sm font-semibold transition-colors ${
-                      confirmModal.paymentMethod === method
-                        ? "border-[#F17D0C] bg-orange-50 text-[#F17D0C]"
-                        : "border-gray-300 text-gray-700 hover:bg-gray-50"
-                    }`}
-                  >
-                    {method}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="mb-8">
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Notes on Order
-              </label>
-              <textarea
-                rows={2}
-                placeholder="Special instructions, allergies, packaging..."
-                value={confirmModal.notes}
-                onChange={(e) =>
-                  setConfirmModal((prev) => ({ ...prev, notes: e.target.value }))
-                }
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F17D0C] focus:border-[#F17D0C] outline-none text-gray-800 resize-none"
-              />
-            </div>
-
-            <div className="flex gap-3">
-              <button
-                onClick={() =>
-                  setConfirmModal({
-                    isOpen: false,
-                    paymentMethod: "",
-                    customerName: "",
-                    customerContact: "",
-                    deliveryDate: "",
-                    notes: "",
-                  })
-                }
-                className="flex-1 py-3 rounded-xl border border-gray-300 text-gray-700 font-bold hover:bg-gray-100 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                disabled={!confirmModal.paymentMethod || !confirmModal.customerName.trim()}
-                onClick={completeSale}
-                className={`flex-1 py-3 rounded-xl text-white font-bold transition-colors ${
-                  !confirmModal.paymentMethod || !confirmModal.customerName.trim()
-                    ? "bg-gray-300 cursor-not-allowed"
-                    : "bg-[#F17D0C] hover:bg-[#d86b06]"
-                }`}
-              >
-                Confirm Order
-              </button>
-            </div>
-          </div>
-        </div>
+        <OrderConfirmationModal
+          modal={confirmModal}
+          cart={cart}
+          cartTotal={cartTotal}
+          todayISO={todayISO}
+          onFieldChange={updateConfirmField}
+          onClose={closeConfirmModal}
+          onConfirm={completeSale}
+          disabled={isConfirmOrderDisabled}
+        />
       )}
 
-      {/* RECEIPT MODAL */}
+      {/* RECEIPT MODAL (extracted to src/components/pos/ReceiptModal.jsx) */}
       {receipt && (
-        <div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 print:bg-white print:static"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) {
-              setReceipt(null);
-            }
-          }}
-        >
-          <div className="print-receipt bg-white p-6 md:p-8 rounded-2xl shadow-2xl w-full max-w-sm max-h-[90vh] overflow-y-auto animate-fadeIn print:shadow-none print:rounded-none">
-            <div className="text-center mb-6">
-              <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-              </div>
-              <h2 className="text-xl font-bold text-[#121212]">Sale Complete</h2>
-              <p className="text-gray-500 text-sm mt-1">{receipt.id}</p>
-              {receipt.type === "Pre-Order" && (
-                <p className="text-xs font-semibold text-[#F17D0C] mt-2 bg-orange-50 rounded-full px-3 py-1 inline-block">
-                  Added to Orders — tracked through production &amp; delivery
-                </p>
-              )}
-            </div>
-
-            <div className="text-sm text-gray-600 space-y-1 mb-4 border-b border-dashed border-gray-300 pb-4">
-              <div className="flex justify-between">
-                <span>Customer</span>
-                <span className="font-semibold text-gray-800">{receipt.customerName}</span>
-              </div>
-              {receipt.customerContact && (
-                <div className="flex justify-between">
-                  <span>Contact</span>
-                  <span className="font-semibold text-gray-800">{receipt.customerContact}</span>
-                </div>
-              )}
-              <div className="flex justify-between">
-                <span>Payment Method</span>
-                <span className="font-semibold text-gray-800">{receipt.paymentMethod}</span>
-              </div>
-              {receipt.type === "Pre-Order" && (
-                <div className="flex justify-between">
-                  <span>Delivery Date</span>
-                  <span className="font-semibold text-gray-800">{receipt.deliveryDate}</span>
-                </div>
-              )}
-              <div className="flex justify-between">
-                <span>Date</span>
-                <span className="font-semibold text-gray-800">
-                  {new Date(receipt.createdAt).toLocaleString()}
-                </span>
-              </div>
-            </div>
-
-            <ul className="divide-y divide-gray-100 mb-4 max-h-[25vh] overflow-y-auto">
-              {receipt.items.map((item) => (
-                <li key={item.id} className="py-2 flex justify-between text-sm">
-                  <span className="text-gray-700">
-                    <span className="text-gray-400 mr-2">{item.qty}x</span>
-                    {item.name}
-                  </span>
-                  <span className="font-semibold text-gray-900">
-                    ₱{(item.price * item.qty).toFixed(2)}
-                  </span>
-                </li>
-              ))}
-            </ul>
-
-            <div className="space-y-1 mb-6 border-t border-dashed border-gray-300 pt-3">
-              <div className="flex justify-between text-gray-500 text-sm">
-                <span>Subtotal</span>
-                <span>₱{receipt.subtotal.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between text-gray-500 text-sm">
-                <span>Tax (5%)</span>
-                <span>₱{receipt.tax.toFixed(2)}</span>
-              </div>
-              <div
-                className={`flex justify-between text-lg font-bold text-[#121212] pt-1 ${
-                  receipt.notes ? "pb-3 border-b border-dashed border-gray-300" : ""
-                }`}
-              >
-                <span>Total</span>
-                <span className="text-[#F17D0C]">₱{receipt.total.toFixed(2)}</span>
-              </div>
-              {receipt.notes && (
-                <div className="flex justify-between text-sm pt-1">
-                  <span className="text-gray-500">Notes</span>
-                  <span className="font-semibold text-gray-800 text-right max-w-[60%]">
-                    {receipt.notes}
-                  </span>
-                </div>
-              )}
-            </div>
-
-            <div className="flex gap-3 print:hidden">
-              <button
-                onClick={() => window.print()}
-                className="flex-1 py-3 rounded-xl border border-gray-300 text-gray-700 font-bold hover:bg-gray-100 transition-colors"
-              >
-                Print Receipt
-              </button>
-              <button
-                onClick={() => setReceipt(null)}
-                className="flex-1 py-3 rounded-xl text-white font-bold bg-[#F17D0C] hover:bg-[#d86b06] transition-colors"
-              >
-                New Sale
-              </button>
-            </div>
-          </div>
-        </div>
+        <ReceiptModal receipt={receipt} onClose={() => setReceipt(null)} />
       )}
 
       {/* MOBILE TOP BAR */}
