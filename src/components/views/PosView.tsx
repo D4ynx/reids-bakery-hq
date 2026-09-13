@@ -1,4 +1,30 @@
 import React from "react";
+import type { MouseEvent as ReactMouseEvent } from "react";
+import type {
+  CartItem,
+  ConfirmModalState,
+  ISODate,
+  PosCategory,
+  PosProduct,
+} from "../../types/domain";
+
+interface PosViewProps {
+  posCategory: PosCategory;
+  setPosCategory: (category: PosCategory) => void;
+  filteredPosProducts: PosProduct[];
+  addToCart: (product: PosProduct) => void;
+  cart: CartItem[];
+  adjustCartQty: (id: string, delta: number) => void;
+  setCart: (cart: CartItem[]) => void;
+  cartSubtotal: number;
+  cartTax: number;
+  cartTotal: number;
+  setConfirmModal: (modal: ConfirmModalState) => void;
+  todayISO: ISODate;
+  windowWidth: number;
+  cartWidth: number;
+  startResizing: (e: ReactMouseEvent) => void;
+}
 
 export default function PosView({
   posCategory,
@@ -16,13 +42,13 @@ export default function PosView({
   windowWidth,
   cartWidth,
   startResizing,
-}) {
+}: PosViewProps) {
   return (
     <div className="flex flex-col-reverse md:flex-row h-full w-full animate-fadeIn">
       <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
         <div className="bg-white shadow-sm border-b border-gray-200 z-10 flex-shrink-0">
           <div className="p-4 flex items-center gap-4 overflow-x-auto hide-scrollbar">
-            {["All", "Pastries", "Bread", "Cakes", "Drinks"].map(
+            {(["All", "Pastries", "Bread", "Cakes", "Drinks"] as const satisfies readonly PosCategory[]).map(
               (cat) => (
                 <button
                   key={cat}

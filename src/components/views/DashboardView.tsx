@@ -1,6 +1,25 @@
 import React from "react";
 import OrderStatusBadge from "../orders/OrderStatusBadge";
 import { computeOrderTotal } from "../../utils/orders";
+import type { Client, NavTabId, Order, Quantity } from "../../types/domain";
+
+interface DashboardViewProps {
+  orders: Order[];
+  clients: Client[];
+  /** Merged finished-goods and raw-material stock below target. */
+  lowStockAlerts: Array<{
+    id: string;
+    name: string;
+    qty: Quantity;
+    target: Quantity;
+    type: string;
+    unit?: string;
+  }>;
+  pendingOrdersCount: number;
+  readyOrdersCount: number;
+  onNavClick: (tab: NavTabId) => void;
+  onViewOrder: (order: Order) => void;
+}
 
 export default function DashboardView({
   orders,
@@ -10,7 +29,7 @@ export default function DashboardView({
   readyOrdersCount,
   onNavClick,
   onViewOrder,
-}) {
+}: DashboardViewProps) {
   return (
     <div className="max-w-6xl mx-auto animate-fadeIn pb-10 w-full">
       <header className="mb-6 md:mb-8 flex flex-col md:flex-row md:justify-between md:items-end gap-4">

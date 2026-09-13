@@ -4,6 +4,36 @@ import RawMaterialsTable from "../inventory/RawMaterialsTable";
 import RestockReminders from "../inventory/RestockReminders";
 import ClosingCountForm from "../inventory/ClosingCountForm";
 import ReconciliationReview from "../inventory/ReconciliationReview";
+import type {
+  ClosingCountSubmission,
+  CountResolutionAction,
+  IngredientFormData,
+  IngredientStock,
+  InventoryCount,
+  InventoryCountId,
+  InventoryTabId,
+  MenuItemStock,
+  RestockCategory,
+  RestockReminder,
+  RestockReminderData,
+} from "../../types/domain";
+
+interface InventoryViewProps {
+  activeTab: InventoryTabId;
+  menuInventory: MenuItemStock[];
+  ingredients: IngredientStock[];
+  restockReminders: RestockReminder[];
+  inventoryCounts: InventoryCount[];
+  onRestockToProduction: () => void;
+  onOpenRestock: (category: RestockCategory, itemId?: string) => void;
+  onAddIngredient: (data: IngredientFormData) => void;
+  onUpdateIngredient: (id: string, data: Partial<IngredientStock>) => void;
+  onAddReminder: (data: RestockReminderData) => void;
+  onToggleReminderDone: (id: string) => void;
+  onSubmitClosingCount: (data: ClosingCountSubmission) => void;
+  onResolveCount: (id: InventoryCountId, action: CountResolutionAction) => void;
+  onApplyAllCounts: () => void;
+}
 
 export default function InventoryView({
   activeTab,
@@ -20,7 +50,7 @@ export default function InventoryView({
   onSubmitClosingCount,
   onResolveCount,
   onApplyAllCounts,
-}) {
+}: InventoryViewProps) {
   return (
     <>
       {activeTab === "inventory-menu" && (
@@ -37,7 +67,7 @@ export default function InventoryView({
       {activeTab === "inventory-ingredients" && (
         <RawMaterialsTable
           ingredients={ingredients}
-          onRestock={(id) => onOpenRestock("ingredient", id)}
+          onRestock={(id: string) => onOpenRestock("ingredient", id)}
           onAdd={onAddIngredient}
           onUpdate={onUpdateIngredient}
         />

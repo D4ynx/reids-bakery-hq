@@ -1,5 +1,23 @@
 import React from "react";
 import ProductionRunsList from "../production/ProductionRunsList";
+import type {
+  IngredientStock,
+  MenuItemStock,
+  ProductionRun,
+  ProductionRunId,
+  Recipe,
+  ScheduleRunData,
+} from "../../types/domain";
+
+interface ProductionViewProps {
+  productionRuns: ProductionRun[];
+  recipes: Recipe[];
+  menuInventory: MenuItemStock[];
+  ingredients: IngredientStock[];
+  onSchedule: (data: ScheduleRunData) => void;
+  onComplete: (id: ProductionRunId) => void;
+  onDelete: (id: ProductionRunId) => void;
+}
 
 export default function ProductionView({
   productionRuns,
@@ -9,7 +27,7 @@ export default function ProductionView({
   onSchedule,
   onComplete,
   onDelete,
-}) {
+}: ProductionViewProps) {
   return (
     <ProductionRunsList
       productionRuns={productionRuns}
