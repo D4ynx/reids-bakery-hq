@@ -289,3 +289,229 @@ export interface DayClosing {
 
 /** Payload of the close-day action (EndOfDayClosing). */
 export type DayClosingData = Omit<DayClosing, "id" | "closedAt">;
+
+// ---------- Navigation ----------
+/** Fixed tab identifiers used by the sidebar and feature views. */
+export type NavTabId =
+  | "dashboard"
+  | "pos"
+  | "orders"
+  | "clients"
+  | "inventory-menu"
+  | "inventory-ingredients"
+  | "inventory-restock"
+  | "inventory-closing-count"
+  | "inventory-reconciliation"
+  | "recipes"
+  | "production-runs"
+  | "calendar"
+  | "reports-dashboard"
+  | "reports-closing"
+  | "reports-inventory";
+
+// ---------- Derived / computed values (utils) ----------
+/** Tabs rendered by the inventory feature view. */
+export type InventoryTabId =
+  | "inventory-menu"
+  | "inventory-ingredients"
+  | "inventory-restock"
+  | "inventory-closing-count"
+  | "inventory-reconciliation";
+
+/** Tabs rendered by the reports feature view. */
+export type ReportsTabId = "reports-dashboard" | "reports-closing" | "reports-inventory";
+
+/** Stock level classification (utils/stock). */
+export type StockStatus = "out" | "low" | "ok";
+
+/** A stock-status bucket produced by groupByStatus (utils/stock). */
+export interface StockStatusGroup {
+  status: StockStatus;
+  items: StockItem[];
+}
+
+/** Payment progress of an order (utils/orders). */
+export type PaymentStatus = "Unpaid" | "Partial" | "Paid";
+
+/** Effective status of a production run, incl. feasibility (utils/production). */
+export type ProductionRunDisposition = "scheduled" | "insufficient" | "completed";
+
+/** Identifier of a fixed sales date-range preset (utils/sales). */
+export type DatePresetId = "today" | "week" | "month" | "all";
+
+/** "YYYY-MM" calendar-month key. */
+export type MonthKey = string;
+
+export interface DatePreset {
+  id: DatePresetId;
+  label: string;
+}
+
+/** Inclusive range filter; empty strings mean "no bound". */
+export interface DateFilterRange {
+  start: ISODate | "";
+  end: ISODate | "";
+}
+
+/** Inclusive ISO date range. */
+export interface DateRange {
+  start: ISODate;
+  end: ISODate;
+}
+
+/** One order line whose stock is short (utils/orders). */
+export interface OrderShortfall {
+  menuItemId: MenuItemId;
+  name: string;
+  requestedQty: Quantity;
+  available: Quantity;
+  shortfall: Quantity;
+}
+
+/** One ingredient line resolved against raw stock (utils/production). */
+export interface RequiredIngredientLine {
+  ingredientId: IngredientId;
+  name: string;
+  unit: string;
+  requiredQty: Quantity;
+  inStock: Quantity;
+  shortfall: Quantity;
+}
+
+/** Cost of a recipe at current ingredient prices (utils/pricing). */
+export interface RecipeCost {
+  totalCost: number;
+  costPerUnit: number;
+}
+
+export interface SalesSummary {
+  totalRevenue: number;
+  totalTax: number;
+  totalTransactions: number;
+  avgTicket: number;
+}
+
+/** One product aggregated across sales (utils/sales). */
+export interface ItemSalesLine {
+  id: MenuItemId;
+  name: string;
+  qty: Quantity;
+  revenue: number;
+}
+
+export interface RevenueByDay {
+  date: ISODate;
+  revenue: number;
+}
+
+export interface RevenueByPaymentMethod {
+  method: PaymentMethod;
+  revenue: number;
+}
+
+/** Aggregated result of computeDailyClosing (utils/closing). */
+export interface DailyClosingReport {
+  date: ISODate;
+  daySales: Sale[];
+  dayExpenses: Expense[];
+  grossSales: number;
+  totalExpenses: number;
+  netProfit: number;
+}
+
+// ---------- Closing inventory report (utils/closingInventory) ----------
+export type ClosingInventorySource = "counted" | "system";
+
+export interface ClosingInventoryRow {
+  id: string;
+  name: string;
+  category: "Menu Item" | "Raw Material";
+  unit: string;
+  systemQty: Quantity;
+  closingQty: Quantity;
+  closingSource: ClosingInventorySource;
+  lastCountDate: ISODate | null;
+  unitValue: number;
+  closingValue: number;
+  periodCountCount: number;
+  discrepancyQty: number;
+}
+
+export interface ClosingInventorySummary {
+  totalValue: number;
+  menuValue: number;
+  ingredientValue: number;
+  countedItems: number;
+  systemItems: number;
+  netDiscrepancyQty: number;
+  netDiscrepancyValue: number;
+}
+
+export interface ClosingInventoryReport {
+  period: DateRange;
+  menuRows: ClosingInventoryRow[];
+  ingredientRows: ClosingInventoryRow[];
+  rows: ClosingInventoryRow[];
+  summary: ClosingInventorySummary;
+}
+
+// ---------- Chams branch stock ledger (FR-3.9, utils/ledger) ----------
+export interface ChamsBranch {
+  id: string;
+  name: string;
+}
+
+export interface ChamsProduct {
+  id: string;
+  name: string;
+  sellingPrice: Price;
+}
+
+/** Opening-count record for one branch/product/month. */
+export interface ChamsBeginning {
+  id: string;
+  branchId: string;
+  productId: string;
+  month: MonthKey;
+  openingCount: Quantity;
+}
+
+/** Spoilage / sold / restocked record for one branch/product/month. */
+export interface ChamsMovement {
+  id: string;
+  branchId: string;
+  productId: string;
+  month: MonthKey;
+  restocked: Quantity;
+  spoilage: Quantity;
+  sold: Quantity;
+}
+
+/** Physical remaining-count record for one branch/product/month. */
+export interface ChamsCount {
+  id: string;
+  branchId: string;
+  productId: string;
+  month: MonthKey;
+  remainingReported: Quantity;
+}
+
+/** Computed ledger row for one branch/product/month (utils/ledger). */
+export interface LedgerRow {
+  branchId: string;
+  branchName: string;
+  productId: string;
+  productName: string;
+  month: MonthKey;
+  beginning: number;
+  beginningSubmitted: boolean;
+  restocked: number;
+  spoilage: number;
+  sold: number;
+  profit: number;
+  remainingCalculated: number;
+  remainingReported: number | null;
+  discrepancy: number | null;
+  flagged: boolean;
+  countSubmitted: boolean;
+}
