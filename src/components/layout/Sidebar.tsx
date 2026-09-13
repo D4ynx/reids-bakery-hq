@@ -1,3 +1,21 @@
+import type { AppView, NavTabId } from "../../types/domain";
+import type { Dispatch, SetStateAction } from "react";
+
+interface SidebarProps {
+  activeTab: NavTabId;
+  windowWidth: number;
+  isMobileOpen: boolean;
+  isTabletSidebarOpen: boolean;
+  setIsMobileOpen: Dispatch<SetStateAction<boolean>>;
+  setIsTabletSidebarOpen: Dispatch<SetStateAction<boolean>>;
+  isInventoryExpanded: boolean;
+  setIsInventoryExpanded: Dispatch<SetStateAction<boolean>>;
+  isReportsExpanded: boolean;
+  setIsReportsExpanded: Dispatch<SetStateAction<boolean>>;
+  onNavClick: (tab: NavTabId) => void;
+  onSwitchView: (view: AppView) => void;
+}
+
 export default function Sidebar({
   activeTab,
   windowWidth,
@@ -11,7 +29,7 @@ export default function Sidebar({
   setIsReportsExpanded,
   onNavClick,
   onSwitchView,
-}) {
+}: SidebarProps) {
   // --- SIDEBAR RESPONSIVE HELPERS ---
   // "Tablet" = md..lg range (768px - 1023px), same cutoff the POS cart width uses.
   // Touch devices can't hover, so the sidebar rail toggles on click instead.
@@ -47,7 +65,7 @@ export default function Sidebar({
         onClick={(e) => {
           if (!isTablet) return;
           // When expanded, only bare spots toggle the rail — button taps keep working
-          if (sidebarExpanded && e.target.closest("button")) return;
+          if (sidebarExpanded && (e.target as HTMLElement).closest("button")) return;
           setIsTabletSidebarOpen((prev) => !prev);
         }}
         className={`

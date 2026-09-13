@@ -1,5 +1,20 @@
 import React from "react";
 import { PAYMENT_METHODS } from "../../utils/orders";
+import type { CartItem, ConfirmModalState, ISODate } from "../../types/domain";
+
+interface OrderConfirmationModalProps {
+  modal: ConfirmModalState;
+  cart: CartItem[];
+  cartTotal: number;
+  todayISO: ISODate;
+  onFieldChange: (
+    field: Exclude<keyof ConfirmModalState, "isOpen">,
+    value: string
+  ) => void;
+  onClose: () => void;
+  onConfirm: () => void;
+  disabled: boolean;
+}
 
 export default function OrderConfirmationModal({
   modal,
@@ -10,7 +25,7 @@ export default function OrderConfirmationModal({
   onClose,
   onConfirm,
   disabled,
-}) {
+}: OrderConfirmationModalProps) {
   return (
     <div
       className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"

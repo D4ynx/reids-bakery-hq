@@ -1,6 +1,12 @@
 import React from "react";
+import type { Sale } from "../../types/domain";
 
-export default function ReceiptModal({ receipt, onClose }) {
+interface ReceiptModalProps {
+  receipt: Sale;
+  onClose: () => void;
+}
+
+export default function ReceiptModal({ receipt, onClose }: ReceiptModalProps) {
   return (
     <div
       className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 print:bg-white print:static"

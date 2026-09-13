@@ -1,4 +1,16 @@
 import React from "react";
+import type { RestockModalState, StockItem } from "../../types/domain";
+
+interface RestockModalProps {
+  modal: RestockModalState;
+  items: StockItem[];
+  onItemChange: (itemId: string) => void;
+  onAmountChange: (amount: string) => void;
+  onQuickAdd: (delta: number) => void;
+  onClose: () => void;
+  onConfirm: () => void;
+  disabled: boolean;
+}
 
 export default function RestockModal({
   modal,
@@ -9,7 +21,7 @@ export default function RestockModal({
   onClose,
   onConfirm,
   disabled,
-}) {
+}: RestockModalProps) {
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
       <div className="bg-white p-6 md:p-8 rounded-2xl shadow-2xl w-full max-w-sm max-h-[90vh] overflow-y-auto animate-fadeIn">
