@@ -14,7 +14,8 @@
         "types": ["vite/client"],
         "lib": [
             "dom",
-            "es2015"
+            "es2015",
+            "es2017.string"
         ],
         "jsx": "react-jsx",
         "noEmit": true
