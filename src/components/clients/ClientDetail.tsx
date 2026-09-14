@@ -1,8 +1,16 @@
 import React from "react";
 import OrderStatusBadge from "../orders/OrderStatusBadge";
 import { computeOrderTotal } from "../../utils/orders";
+import type { Client, Order } from "../../types/domain";
 
-export default function ClientDetail({ client, orders, onBack, onViewOrder }) {
+interface ClientDetailProps {
+  client: Client;
+  orders: Order[];
+  onBack: () => void;
+  onViewOrder: (order: Order) => void;
+}
+
+export default function ClientDetail({ client, orders, onBack, onViewOrder }: ClientDetailProps) {
   const clientOrders = [...orders]
     .filter((o) => o.clientId === client.id)
     .sort((a, b) => b.requestedDate.localeCompare(a.requestedDate));
@@ -66,7 +74,7 @@ export default function ClientDetail({ client, orders, onBack, onViewOrder }) {
             <tbody className="divide-y divide-gray-100 text-sm">
               {clientOrders.length === 0 ? (
                 <tr>
-                  <td colSpan="4" className="px-5 py-8 text-center text-gray-500">
+                  <td colSpan={4} className="px-5 py-8 text-center text-gray-500">
                     No orders yet.
                   </td>
                 </tr>

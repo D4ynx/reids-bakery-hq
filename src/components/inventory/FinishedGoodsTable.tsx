@@ -2,10 +2,16 @@ import React, { useState } from "react";
 import InventoryStatsBar from "./InventoryStatsBar";
 import StockStatusBadge from "./StockStatusBadge";
 import { groupByStatus, getStockStatus, STOCK_STATUS_LABELS } from "../../utils/stock";
+import type { MenuItemStock, StockStatus } from "../../types/domain";
 
-export default function FinishedGoodsTable({ menuInventory, onRestock }) {
+interface FinishedGoodsTableProps {
+  menuInventory: MenuItemStock[];
+  onRestock: (itemId: string) => void;
+}
+
+export default function FinishedGoodsTable({ menuInventory, onRestock }: FinishedGoodsTableProps) {
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | StockStatus>("all");
 
   const searched = menuInventory.filter(
     (item) =>
@@ -70,7 +76,7 @@ export default function FinishedGoodsTable({ menuInventory, onRestock }) {
             <tbody className="divide-y divide-[#F3B978]/50">
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan="6" className="text-center py-6 text-gray-500">
+                  <td colSpan={6} className="text-center py-6 text-gray-500">
                     No items match your search.
                   </td>
                 </tr>
@@ -80,7 +86,7 @@ export default function FinishedGoodsTable({ menuInventory, onRestock }) {
                     {statusFilter === "all" && (
                       <tr>
                         <td
-                          colSpan="6"
+                          colSpan={6}
                           className="px-4 md:px-6 py-2 bg-[#FDF9F3] text-xs font-bold uppercase tracking-wider text-[#562D07]/70"
                         >
                           {STOCK_STATUS_LABELS[group.status]} ({group.items.length})

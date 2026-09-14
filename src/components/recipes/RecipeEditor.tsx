@@ -1,15 +1,38 @@
 import React, { useState } from "react";
 import { computeRecipeCost, suggestedPrice } from "../../utils/pricing";
+import type { FormEvent } from "react";
+import type {
+  IngredientStock,
+  MenuItemStock,
+  PricingRules,
+  Recipe,
+  RecipeInput,
+} from "../../types/domain";
 
 const emptyLine = () => ({ ingredientId: "", qty: "", unit: "" });
 
-const clampMargin = (value) => Math.min(Math.max(value, 0), 95);
+const clampMargin = (value: number) => Math.min(Math.max(value, 0), 95);
 
 const TIER_LABELS = ["Conservative", "Standard", "Premium"];
 
-export default function RecipeEditor({ recipe, ingredients, menuInventory, pricingRules, onCancel, onSave }) {
+interface RecipeEditorProps {
+  recipe: Recipe | null;
+  ingredients: IngredientStock[];
+  menuInventory: MenuItemStock[];
+  pricingRules: PricingRules;
+  onCancel: () => void;
+  onSave: (recipe: RecipeInput) => void;
+}
+
+/** Editor form state: yieldQty is a raw string while typing. */
+type RecipeEditorForm = Omit<RecipeInput, "yieldQty" | "ingredients"> & {
+  yieldQty: string | number;
+  ingredients: Array<{ ingredientId: string; qty: string | number; unit: string }>;
+};
+
+export default function RecipeEditor({ recipe, ingredients, menuInventory, pricingRules, onCancel, onSave }: RecipeEditorProps) {
   const isNew = !recipe;
-  const [form, setForm] = useState(
+  const [form, setForm] = useState<RecipeEditorForm>(
     recipe || {
       id: null,
       menuItemId: menuInventory[0]?.id || "",
@@ -20,20 +43,21 @@ export default function RecipeEditor({ recipe, ingredients, menuInventory, prici
     }
   );
 
-  const [marginTiers, setMarginTiers] = useState(() => {
+  const [marginTiers, setMarginTiers] = useState<Array<number | "">>(() => {
     const base = Number(pricingRules.targetMarginPercent) || 40;
     return [clampMargin(base - 10), clampMargin(base), clampMargin(base + 10)];
   });
 
-  const updateMarginTier = (idx, value) => {
+  const updateMarginTier = (idx: number, value: string) => {
     setMarginTiers((prev) =>
       prev.map((m, i) => (i === idx ? (value === "" ? "" : clampMargin(parseFloat(value) || 0)) : m))
     );
   };
 
-  const updateField = (field, value) => setForm((prev) => ({ ...prev, [field]: value }));
+  const updateField = (field: "menuItemId" | "name" | "yieldUnit" | "yieldQty", value: string) =>
+    setForm((prev) => ({ ...prev, [field]: value }));
 
-  const updateLine = (idx, field, value) => {
+  const updateLine = (idx: number, field: "ingredientId" | "qty" | "unit", value: string) => {
     setForm((prev) => ({
       ...prev,
       ingredients: prev.ingredients.map((line, i) =>
@@ -45,31 +69,32 @@ export default function RecipeEditor({ recipe, ingredients, menuInventory, prici
   const addLine = () =>
     setForm((prev) => ({ ...prev, ingredients: [...prev.ingredients, emptyLine()] }));
 
-  const removeLine = (idx) =>
+  const removeLine = (idx: number) =>
     setForm((prev) => ({ ...prev, ingredients: prev.ingredients.filter((_, i) => i !== idx) }));
 
   const normalizedForCalc = {
     ...form,
-    yieldQty: parseFloat(form.yieldQty) || 0,
+    id: form.id || "",
+    yieldQty: parseFloat(String(form.yieldQty)) || 0,
     ingredients: form.ingredients
       .filter((l) => l.ingredientId)
-      .map((l) => ({ ...l, qty: parseFloat(l.qty) || 0 })),
-  };
+      .map((l) => ({ ...l, qty: parseFloat(String(l.qty)) || 0 })),
+  } as Recipe;
   const { totalCost, costPerUnit } = computeRecipeCost(normalizedForCalc, ingredients);
   const linkedMenuItem = menuInventory.find((m) => m.id === form.menuItemId);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (!form.name || !form.menuItemId || !form.yieldQty) return;
     const cleanIngredients = form.ingredients
       .filter((l) => l.ingredientId && l.qty !== "")
-      .map((l) => ({ ...l, qty: parseFloat(l.qty) || 0 }));
+      .map((l) => ({ ...l, qty: parseFloat(String(l.qty)) || 0 }));
     if (cleanIngredients.length === 0) return;
     onSave({
       id: form.id,
       menuItemId: form.menuItemId,
       name: form.name,
-      yieldQty: parseFloat(form.yieldQty),
+      yieldQty: parseFloat(String(form.yieldQty)),
       yieldUnit: form.yieldUnit,
       ingredients: cleanIngredients,
     });

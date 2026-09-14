@@ -10,17 +10,37 @@ import {
   ORDER_STATUSES,
   PAYMENT_METHODS,
 } from "../../utils/orders";
+import type { FormEvent } from "react";
+import type {
+  Client,
+  MenuItemStock,
+  Order,
+  OrderDeliveryInput,
+  OrderId,
+  OrderItem,
+  OrderPaymentInput,
+  OrderStatus,
+  PaymentMethod,
+} from "../../types/domain";
 
-const STATUS_ACTION_LABEL = {
+const STATUS_ACTION_LABEL: Partial<Record<OrderStatus, string>> = {
   Pending: "Mark In Production",
   "In Production": "Mark Ready",
 };
 
-function ScheduleDeliveryModal({ order, onClose, onSchedule }) {
+function ScheduleDeliveryModal({
+  order,
+  onClose,
+  onSchedule,
+}: {
+  order: Order;
+  onClose: () => void;
+  onSchedule: (data: OrderDeliveryInput) => void;
+}) {
   const [deliveryDate, setDeliveryDate] = useState(order.deliveryDate || "");
   const [assignedTo, setAssignedTo] = useState(order.assignedTo || "");
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (!deliveryDate || !assignedTo) return;
     onSchedule({ deliveryDate, assignedTo });
@@ -77,12 +97,20 @@ function ScheduleDeliveryModal({ order, onClose, onSchedule }) {
   );
 }
 
-function RecordPaymentModal({ order, onClose, onRecord }) {
+function RecordPaymentModal({
+  order,
+  onClose,
+  onRecord,
+}: {
+  order: Order;
+  onClose: () => void;
+  onRecord: (data: OrderPaymentInput) => void;
+}) {
   const amountDue = computeAmountDue(order);
-  const [method, setMethod] = useState(order.paymentMethod || PAYMENT_METHODS[0]);
+  const [method, setMethod] = useState<PaymentMethod>(order.paymentMethod || PAYMENT_METHODS[0]);
   const [amount, setAmount] = useState(amountDue > 0 ? amountDue.toFixed(2) : "");
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     const parsed = parseFloat(amount);
     if (!method || isNaN(parsed) || parsed <= 0) return;
@@ -102,7 +130,7 @@ function RecordPaymentModal({ order, onClose, onRecord }) {
             <label className="block text-sm font-semibold text-gray-700 mb-1">Payment Method</label>
             <select
               value={method}
-              onChange={(e) => setMethod(e.target.value)}
+              onChange={(e) => setMethod(e.target.value as PaymentMethod)}
               className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F17D0C] focus:border-[#F17D0C] outline-none text-gray-800"
             >
               {PAYMENT_METHODS.map((m) => (
@@ -146,6 +174,18 @@ function RecordPaymentModal({ order, onClose, onRecord }) {
   );
 }
 
+interface OrderDetailProps {
+  order: Order;
+  client: Client | undefined;
+  menuInventory: MenuItemStock[];
+  onBack: () => void;
+  onAdvanceStatus: (id: OrderId, status: OrderStatus | null) => void;
+  onScheduleDelivery: (id: OrderId, data: OrderDeliveryInput) => void;
+  onMarkDelivered: (id: OrderId) => void;
+  onRecordPayment: (id: OrderId, data: OrderPaymentInput) => void;
+  onGoToProduction: () => void;
+}
+
 export default function OrderDetail({
   order,
   client,
@@ -156,7 +196,7 @@ export default function OrderDetail({
   onMarkDelivered,
   onRecordPayment,
   onGoToProduction,
-}) {
+}: OrderDetailProps) {
   const [isScheduling, setIsScheduling] = useState(false);
   const [isRecordingPayment, setIsRecordingPayment] = useState(false);
   const shortfalls = order.status !== "Delivered" ? getOrderShortfalls(order, menuInventory) : [];
@@ -165,7 +205,8 @@ export default function OrderDetail({
   const paymentStatus = getPaymentStatus(order);
   const advanceLabel = STATUS_ACTION_LABEL[order.status];
 
-  const itemName = (line) => menuInventory.find((m) => m.id === line.menuItemId)?.name || line.name || line.menuItemId;
+  const itemName = (line: OrderItem) =>
+    menuInventory.find((m) => m.id === line.menuItemId)?.name || line.name || line.menuItemId;
 
   return (
     <div className="max-w-6xl mx-auto animate-fadeIn pb-10 w-full">

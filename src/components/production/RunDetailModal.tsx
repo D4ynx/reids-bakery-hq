@@ -1,7 +1,18 @@
 import React from "react";
 import { computeBatches, computeRequiredIngredients, isRunFeasible } from "../../utils/production";
+import type { IngredientStock, MenuItemStock, ProductionRun, ProductionRunId, Recipe } from "../../types/domain";
 
-export default function RunDetailModal({ run, recipe, menuItem, ingredients, onClose, onComplete, onDelete }) {
+interface RunDetailModalProps {
+  run: ProductionRun;
+  recipe: Recipe;
+  menuItem: MenuItemStock | undefined;
+  ingredients: IngredientStock[];
+  onClose: () => void;
+  onComplete: (id: ProductionRunId) => void;
+  onDelete: () => void;
+}
+
+export default function RunDetailModal({ run, recipe, menuItem, ingredients, onClose, onComplete, onDelete }: RunDetailModalProps) {
   const batches = computeBatches(run.plannedQty, recipe);
   const required = computeRequiredIngredients(run, recipe, ingredients);
   const feasible = isRunFeasible(run, recipe, ingredients);

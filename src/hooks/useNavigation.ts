@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { AppView } from "../types/domain";
+import type { AppView, NavTabId } from "../types/domain";
 
 /**
  * Owns application navigation: the active view (Reid's HQ vs Chams ledger),
@@ -11,7 +11,7 @@ import type { AppView } from "../types/domain";
  */
 export function useNavigation() {
   const [activeView, setActiveView] = useState<AppView>("reids");
-  const [activeTab, setActiveTab] = useState("dashboard");
+  const [activeTab, setActiveTab] = useState<NavTabId>("dashboard");
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isTabletSidebarOpen, setIsTabletSidebarOpen] = useState(false);
   const [isInventoryExpanded, setIsInventoryExpanded] = useState(false);

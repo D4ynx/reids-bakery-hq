@@ -1,13 +1,12 @@
 import React from "react";
+import type { PaymentStatus } from "../../types/domain";
 
-export default function OrderStatusBadge({ status }) {
+export default function PaymentStatusBadge({ status }: { status: PaymentStatus }) {
   const style =
-    status === "Pending"
-      ? "text-blue-700 border-blue-300 bg-blue-50"
-      : status === "Ready"
+    status === "Paid"
       ? "text-green-700 border-green-300 bg-green-50"
-      : status === "In Production"
-      ? "text-[#562D07] border-[#562D07]/30 bg-[#562D07]/5"
+      : status === "Partial"
+      ? "text-amber-700 border-amber-300 bg-amber-50"
       : "text-gray-700 border-gray-300 bg-gray-50";
   return (
     <span

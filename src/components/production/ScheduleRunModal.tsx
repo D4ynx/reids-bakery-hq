@@ -1,9 +1,17 @@
 import React, { useState } from "react";
 import { computeBatches } from "../../utils/production";
+import type { FormEvent } from "react";
+import type { Recipe, ScheduleRunData } from "../../types/domain";
 
 const today = () => new Date().toISOString().slice(0, 10);
 
-export default function ScheduleRunModal({ recipes, onClose, onSchedule }) {
+interface ScheduleRunModalProps {
+  recipes: Recipe[];
+  onClose: () => void;
+  onSchedule: (data: ScheduleRunData) => void;
+}
+
+export default function ScheduleRunModal({ recipes, onClose, onSchedule }: ScheduleRunModalProps) {
   const [form, setForm] = useState({
     recipeId: recipes[0]?.id || "",
     qty: "",
@@ -18,7 +26,7 @@ export default function ScheduleRunModal({ recipes, onClose, onSchedule }) {
   const batches = recipe ? (isBatchMode ? qtyNum : computeBatches(qtyNum, recipe)) : 0;
   const plannedQtyUnits = recipe ? (isBatchMode ? batches * recipe.yieldQty : qtyNum) : 0;
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (!form.recipeId || !recipe || qtyNum <= 0 || !form.plannedDate) return;
     onSchedule({

@@ -2,22 +2,49 @@ import React, { useState } from "react";
 import InventoryStatsBar from "./InventoryStatsBar";
 import StockStatusBadge from "./StockStatusBadge";
 import { groupByStatus, getStockStatus, STOCK_STATUS_LABELS } from "../../utils/stock";
+import type { FormEvent } from "react";
+import type { IngredientFormData, IngredientStock, StockStatus } from "../../types/domain";
 
-function IngredientFormModal({ initial, onClose, onSave }) {
-  const [form, setForm] = useState(
-    initial || {
-      name: "",
-      qty: "",
-      target: "",
-      unit: "",
-      supplier: "",
-      unitCost: "",
-    }
+/** Ingredient form state: numeric fields are raw strings while typing. */
+type IngredientFormState = Omit<IngredientFormData, "qty" | "target" | "unitCost"> & {
+  qty: string;
+  target: string;
+  unitCost: string;
+};
+
+function IngredientFormModal({
+  initial,
+  onClose,
+  onSave,
+}: {
+  initial: IngredientStock | null;
+  onClose: () => void;
+  onSave: (data: IngredientFormData) => void;
+}) {
+  const [form, setForm] = useState<IngredientFormState>(
+    initial
+      ? {
+          name: initial.name,
+          qty: String(initial.qty),
+          target: String(initial.target),
+          unit: initial.unit,
+          supplier: initial.supplier,
+          unitCost: String(initial.unitCost),
+        }
+      : {
+          name: "",
+          qty: "",
+          target: "",
+          unit: "",
+          supplier: "",
+          unitCost: "",
+        }
   );
 
-  const update = (field, value) => setForm((prev) => ({ ...prev, [field]: value }));
+  const update = (field: keyof IngredientFormState, value: string) =>
+    setForm((prev) => ({ ...prev, [field]: value }));
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (!form.name || form.qty === "" || form.target === "" || !form.unit) return;
     onSave({
@@ -137,10 +164,20 @@ function IngredientFormModal({ initial, onClose, onSave }) {
   );
 }
 
-export default function RawMaterialsTable({ ingredients, onRestock, onAdd, onUpdate }) {
+interface RawMaterialsTableProps {
+  ingredients: IngredientStock[];
+  onRestock: (itemId: string) => void;
+  onAdd: (data: IngredientFormData) => void;
+  onUpdate: (id: string, data: Partial<IngredientStock>) => void;
+}
+
+export default function RawMaterialsTable({ ingredients, onRestock, onAdd, onUpdate }: RawMaterialsTableProps) {
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [modalState, setModalState] = useState({ isOpen: false, editing: null });
+  const [statusFilter, setStatusFilter] = useState<"all" | StockStatus>("all");
+  const [modalState, setModalState] = useState<{ isOpen: boolean; editing: IngredientStock | null }>({
+    isOpen: false,
+    editing: null,
+  });
 
   const searched = ingredients.filter(
     (item) =>
@@ -150,7 +187,7 @@ export default function RawMaterialsTable({ ingredients, onRestock, onAdd, onUpd
   const filtered = statusFilter === "all" ? searched : searched.filter((item) => getStockStatus(item) === statusFilter);
   const groups = groupByStatus(filtered);
 
-  const handleSave = (data) => {
+  const handleSave = (data: IngredientFormData) => {
     if (modalState.editing) {
       onUpdate(modalState.editing.id, data);
     } else {
@@ -230,7 +267,7 @@ export default function RawMaterialsTable({ ingredients, onRestock, onAdd, onUpd
             <tbody className="divide-y divide-[#F3B978]/50">
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan="8" className="text-center py-6 text-gray-500">
+                  <td colSpan={8} className="text-center py-6 text-gray-500">
                     No ingredients match your search.
                   </td>
                 </tr>
@@ -240,7 +277,7 @@ export default function RawMaterialsTable({ ingredients, onRestock, onAdd, onUpd
                     {statusFilter === "all" && (
                       <tr>
                         <td
-                          colSpan="8"
+                          colSpan={8}
                           className="px-4 md:px-6 py-2 bg-[#FDF9F3] text-xs font-bold uppercase tracking-wider text-[#562D07]/70"
                         >
                           {STOCK_STATUS_LABELS[group.status]} ({group.items.length})

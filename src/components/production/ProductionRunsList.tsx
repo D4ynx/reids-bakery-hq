@@ -2,19 +2,38 @@ import React, { useState } from "react";
 import ScheduleRunModal from "./ScheduleRunModal";
 import RunDetailModal from "./RunDetailModal";
 import { getRunStatus, RUN_STATUS_LABELS } from "../../utils/production";
+import type {
+  IngredientStock,
+  MenuItemStock,
+  ProductionRun,
+  ProductionRunDisposition,
+  ProductionRunId,
+  Recipe,
+  ScheduleRunData,
+} from "../../types/domain";
 
-const STATUS_STYLES = {
+const STATUS_STYLES: Record<ProductionRunDisposition, string> = {
   scheduled: "border-blue-300 bg-blue-50 text-blue-700",
   insufficient: "border-red-300 bg-red-50 text-red-700",
   completed: "border-green-300 bg-green-50 text-green-700",
 };
 
-const STAT_CARDS = [
+const STAT_CARDS: Array<{ key: "all" | ProductionRunDisposition; label: string; iconBg: string }> = [
   { key: "all", label: "Total Runs", iconBg: "bg-gray-100 text-gray-500" },
   { key: "scheduled", label: "Scheduled", iconBg: "bg-blue-50 text-blue-500" },
   { key: "insufficient", label: "Insufficient Stock", iconBg: "bg-red-50 text-red-500" },
   { key: "completed", label: "Completed", iconBg: "bg-green-50 text-green-500" },
 ];
+
+interface ProductionRunsListProps {
+  productionRuns: ProductionRun[];
+  recipes: Recipe[];
+  menuInventory: MenuItemStock[];
+  ingredients: IngredientStock[];
+  onSchedule: (data: ScheduleRunData) => void;
+  onComplete: (id: ProductionRunId) => void;
+  onDelete: (id: ProductionRunId) => void;
+}
 
 export default function ProductionRunsList({
   productionRuns,
@@ -24,17 +43,26 @@ export default function ProductionRunsList({
   onSchedule,
   onComplete,
   onDelete,
-}) {
-  const [statusFilter, setStatusFilter] = useState("all");
+}: ProductionRunsListProps) {
+  const [statusFilter, setStatusFilter] = useState<"all" | ProductionRunDisposition>("all");
   const [isScheduling, setIsScheduling] = useState(false);
-  const [selectedRunId, setSelectedRunId] = useState(null);
+  const [selectedRunId, setSelectedRunId] = useState<ProductionRunId | null>(null);
 
   const withStatus = productionRuns.map((run) => {
-    const recipe = recipes.find((r) => r.id === run.recipeId);
-    return { run, recipe, status: recipe ? getRunStatus(run, recipe, ingredients) : "scheduled" };
+    const recipe = recipes.find((r) => r.id === run.recipeId) || null;
+    return {
+      run,
+      recipe,
+      status: (recipe ? getRunStatus(run, recipe, ingredients) : "scheduled") as ProductionRunDisposition,
+    };
   });
 
-  const counts = { all: withStatus.length, scheduled: 0, insufficient: 0, completed: 0 };
+  const counts: Record<"all" | ProductionRunDisposition, number> = {
+    all: withStatus.length,
+    scheduled: 0,
+    insufficient: 0,
+    completed: 0,
+  };
   withStatus.forEach(({ status }) => {
     counts[status] += 1;
   });
@@ -44,7 +72,7 @@ export default function ProductionRunsList({
 
   const sorted = [...filtered].sort((a, b) => a.run.plannedDate.localeCompare(b.run.plannedDate));
 
-  const groupedByDate = [];
+  const groupedByDate: Array<{ date: string; entries: typeof withStatus }> = [];
   sorted.forEach((entry) => {
     const lastGroup = groupedByDate[groupedByDate.length - 1];
     if (lastGroup && lastGroup.date === entry.run.plannedDate) {
@@ -55,18 +83,20 @@ export default function ProductionRunsList({
   });
 
   const selectedEntry = withStatus.find((entry) => entry.run.id === selectedRunId);
+  const selectedModalEntry =
+    selectedEntry && selectedEntry.recipe ? { ...selectedEntry, recipe: selectedEntry.recipe } : null;
 
-  const handleSchedule = (data) => {
+  const handleSchedule = (data: ScheduleRunData) => {
     onSchedule(data);
     setIsScheduling(false);
   };
 
-  const handleComplete = (id) => {
+  const handleComplete = (id: ProductionRunId) => {
     onComplete(id);
     setSelectedRunId(null);
   };
 
-  const handleDelete = (run) => {
+  const handleDelete = (run: ProductionRun) => {
     if (!window.confirm(`Delete this scheduled run (${run.plannedQty} planned)? This can't be undone.`)) return;
     onDelete(run.id);
     setSelectedRunId(null);
@@ -77,15 +107,15 @@ export default function ProductionRunsList({
       {isScheduling && (
         <ScheduleRunModal recipes={recipes} onClose={() => setIsScheduling(false)} onSchedule={handleSchedule} />
       )}
-      {selectedEntry && (
+      {selectedModalEntry && (
         <RunDetailModal
-          run={selectedEntry.run}
-          recipe={selectedEntry.recipe}
-          menuItem={menuInventory.find((m) => m.id === selectedEntry.recipe.menuItemId)}
+          run={selectedModalEntry.run}
+          recipe={selectedModalEntry.recipe}
+          menuItem={menuInventory.find((m) => m.id === selectedModalEntry.recipe.menuItemId)}
           ingredients={ingredients}
           onClose={() => setSelectedRunId(null)}
           onComplete={handleComplete}
-          onDelete={() => handleDelete(selectedEntry.run)}
+          onDelete={() => handleDelete(selectedModalEntry.run)}
         />
       )}
 

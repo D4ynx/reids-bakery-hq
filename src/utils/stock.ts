@@ -14,8 +14,8 @@ export const STOCK_STATUS_LABELS: Record<StockStatus, string> = {
   ok: "In Stock",
 };
 
-export function groupByStatus(items: StockItem[]): StockStatusGroup[] {
-  const groups: Record<StockStatus, StockItem[]> = { out: [], low: [], ok: [] };
+export function groupByStatus<T extends StockItem>(items: T[]): Array<{ status: StockStatus; items: T[] }> {
+  const groups: Record<StockStatus, T[]> = { out: [], low: [], ok: [] };
   items.forEach((item) => {
     groups[getStockStatus(item)].push(item);
   });

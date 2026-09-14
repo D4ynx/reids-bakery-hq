@@ -1,7 +1,21 @@
 import React, { useState } from "react";
 import { formatMonthLabel, monthKey } from "../../utils/ledger";
+import type { FormEvent } from "react";
+import type { ChamsBranch, ChamsCount, ChamsProduct } from "../../types/domain";
 
-export default function RemainingCountForm({ branches, products, counts, onSubmit }) {
+interface RemainingCountFormProps {
+  branches: ChamsBranch[];
+  products: ChamsProduct[];
+  counts: ChamsCount[];
+  onSubmit: (data: {
+    branchId: string;
+    productId: string;
+    month: string;
+    remainingReported: number;
+  }) => void;
+}
+
+export default function RemainingCountForm({ branches, products, counts, onSubmit }: RemainingCountFormProps) {
   const month = monthKey();
   const [branchId, setBranchId] = useState(branches[0]?.id || "");
   const [productId, setProductId] = useState(products[0]?.id || "");
@@ -12,7 +26,7 @@ export default function RemainingCountForm({ branches, products, counts, onSubmi
     (c) => c.branchId === branchId && c.productId === productId && c.month === month
   );
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (remainingReported === "") return;
 

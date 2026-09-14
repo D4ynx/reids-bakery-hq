@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import { formatMonthLabel, buildLedgerHistoryForBranchProduct } from "../../utils/ledger";
 import { discrepancyLabel } from "../../utils/counts";
+import type { ChamsBeginning, ChamsBranch, ChamsCount, ChamsMovement, ChamsProduct, LedgerRow } from "../../types/domain";
 
-function TrendBars({ rows }) {
+function TrendBars({ rows }: { rows: LedgerRow[] }) {
   const max = Math.max(1, ...rows.map((r) => r.remainingCalculated));
   return (
     <div className="flex items-end gap-2" style={{ height: 140 }}>
@@ -26,7 +27,15 @@ function TrendBars({ rows }) {
   );
 }
 
-export default function LedgerHistory({ branches, products, beginnings, movements, counts }) {
+interface LedgerHistoryProps {
+  branches: ChamsBranch[];
+  products: ChamsProduct[];
+  beginnings: ChamsBeginning[];
+  movements: ChamsMovement[];
+  counts: ChamsCount[];
+}
+
+export default function LedgerHistory({ branches, products, beginnings, movements, counts }: LedgerHistoryProps) {
   const [branchId, setBranchId] = useState(branches[0]?.id || "");
   const [productId, setProductId] = useState(products[0]?.id || "");
   const branch = branches.find((b) => b.id === branchId);
@@ -110,7 +119,7 @@ export default function LedgerHistory({ branches, products, beginnings, movement
                       </span>
                     ) : r.flagged ? (
                       <span className="text-xs font-bold text-red-600 bg-red-100 px-2 py-1 rounded-full">
-                        {discrepancyLabel(r.discrepancy)}
+                        {discrepancyLabel(r.discrepancy as number)}
                       </span>
                     ) : (
                       <span className="text-xs font-bold text-green-600 bg-green-100 px-2 py-1 rounded-full">

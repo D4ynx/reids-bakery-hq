@@ -5,15 +5,22 @@ import MovementLogForm from "./MovementLogForm";
 import RemainingCountForm from "./RemainingCountForm";
 import LedgerHistory from "./LedgerHistory";
 import { monthKey, shiftMonthKey } from "../../utils/ledger";
+import type {
+  ChamsBeginning,
+  ChamsBranch,
+  ChamsCount,
+  ChamsMovement,
+  ChamsProduct,
+} from "../../types/domain";
 
-const INITIAL_BRANCHES = [
+const INITIAL_BRANCHES: ChamsBranch[] = [
   { id: "BR-01", name: "Chams Poblacion" },
   { id: "BR-02", name: "Chams Lahug" },
   { id: "BR-03", name: "Chams Mandaue" },
 ];
 
 // FR-3.9.6: sellingPrice is the standardized price used for profit = sold x price.
-const SIOPAO_PRODUCTS = [
+const SIOPAO_PRODUCTS: ChamsProduct[] = [
   { id: "PORK", name: "Pork Siopao", sellingPrice: 25 },
   { id: "BEEF", name: "Beef Siopao", sellingPrice: 28 },
   { id: "CHOCO", name: "Choco Siopao", sellingPrice: 22 },
@@ -25,13 +32,17 @@ const MONTH_MINUS_2 = shiftMonthKey(CURRENT_MONTH, -2);
 
 // Rough per-branch and per-product volume multipliers used only to seed
 // plausible demo data — not part of the ledger's actual math.
-const BRANCH_FACTOR = { "BR-01": 1, "BR-02": 0.7, "BR-03": 0.5 };
-const PRODUCT_BASE = { PORK: 90, BEEF: 70, CHOCO: 60 };
+const BRANCH_FACTOR: Record<string, number> = { "BR-01": 1, "BR-02": 0.7, "BR-03": 0.5 };
+const PRODUCT_BASE: Record<string, number> = { PORK: 90, BEEF: 70, CHOCO: 60 };
 
-function buildSeedData() {
-  const beginnings = [];
-  const movements = [];
-  const counts = [];
+function buildSeedData(): {
+  beginnings: ChamsBeginning[];
+  movements: ChamsMovement[];
+  counts: ChamsCount[];
+} {
+  const beginnings: ChamsBeginning[] = [];
+  const movements: ChamsMovement[] = [];
+  const counts: ChamsCount[] = [];
   let beginningSeq = 0;
   let movementSeq = 0;
   let countSeq = 0;
@@ -56,7 +67,7 @@ function buildSeedData() {
       });
 
       let carryOver = 0;
-      let remaining = null;
+      let remaining: number | null = null;
       [MONTH_MINUS_2, MONTH_MINUS_1].forEach((month, idx) => {
         const beginning = month === MONTH_MINUS_2 ? openingCount : 0;
         const manualRestocked = Math.round(baseStock * (idx === 0 ? 0.85 : 0.6));
@@ -82,7 +93,7 @@ function buildSeedData() {
           branchId: branch.id,
           productId: product.id,
           month,
-          remainingReported: remaining,
+          remainingReported: remaining as number,
         });
       });
 
@@ -119,7 +130,7 @@ function buildSeedData() {
   return { beginnings, movements, counts };
 }
 
-const NAV_ITEMS = [
+const NAV_ITEMS: Array<{ key: ChamsTabId; label: string; path: string }> = [
   {
     key: "ledger",
     label: "Ledger",
@@ -147,8 +158,14 @@ const NAV_ITEMS = [
   },
 ];
 
-export default function ChamsStockLedger({ onSwitchView }) {
-  const [activeChamsTab, setActiveChamsTab] = useState("ledger");
+type ChamsTabId = "ledger" | "beginning" | "movement-entry" | "count-entry" | "history";
+
+interface ChamsStockLedgerProps {
+  onSwitchView: () => void;
+}
+
+export default function ChamsStockLedger({ onSwitchView }: ChamsStockLedgerProps) {
+  const [activeChamsTab, setActiveChamsTab] = useState<ChamsTabId>("ledger");
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isTabletSidebarOpen, setIsTabletSidebarOpen] = useState(false);
   const [windowWidth, setWindowWidth] = useState(
@@ -177,13 +194,13 @@ export default function ChamsStockLedger({ onSwitchView }) {
     ? "opacity-100"
     : "opacity-100 md:opacity-0 lg:group-hover:opacity-100";
 
-  const handleNavClick = (tab) => {
+  const handleNavClick = (tab: ChamsTabId) => {
     setActiveChamsTab(tab);
     setIsMobileOpen(false);
     setIsTabletSidebarOpen(false);
   };
 
-  const upsertBeginning = (data) => {
+  const upsertBeginning = (data: Omit<ChamsBeginning, "id">) => {
     setBeginnings((prev) => {
       const idx = prev.findIndex(
         (b) => b.branchId === data.branchId && b.productId === data.productId && b.month === data.month
@@ -195,7 +212,7 @@ export default function ChamsStockLedger({ onSwitchView }) {
     });
   };
 
-  const upsertMovement = (data) => {
+  const upsertMovement = (data: Omit<ChamsMovement, "id">) => {
     setMovements((prev) => {
       const idx = prev.findIndex(
         (m) => m.branchId === data.branchId && m.productId === data.productId && m.month === data.month
@@ -207,7 +224,7 @@ export default function ChamsStockLedger({ onSwitchView }) {
     });
   };
 
-  const upsertCount = (data) => {
+  const upsertCount = (data: Omit<ChamsCount, "id">) => {
     setCounts((prev) => {
       const idx = prev.findIndex(
         (c) => c.branchId === data.branchId && c.productId === data.productId && c.month === data.month
@@ -260,7 +277,7 @@ export default function ChamsStockLedger({ onSwitchView }) {
         onClick={(e) => {
           if (!isTablet) return;
           // When expanded, only bare spots toggle the rail — button taps keep working
-          if (sidebarExpanded && e.target.closest("button")) return;
+          if (sidebarExpanded && (e.target as HTMLElement).closest("button")) return;
           setIsTabletSidebarOpen((prev) => !prev);
         }}
         className={`

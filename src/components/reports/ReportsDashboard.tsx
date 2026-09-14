@@ -13,8 +13,17 @@ import {
   salesToCSV,
   downloadCSV,
 } from "../../utils/sales";
+import type { DatePresetId, Sale } from "../../types/domain";
 
-function StatCard({ label, value, accent }) {
+function StatCard({
+  label,
+  value,
+  accent,
+}: {
+  label: string;
+  value: string | number;
+  accent?: string;
+}) {
   return (
     <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
       <p className="text-gray-500 text-xs md:text-sm font-medium mb-1">{label}</p>
@@ -23,8 +32,13 @@ function StatCard({ label, value, accent }) {
   );
 }
 
-export default function ReportsDashboard({ sales, onReprintSale }) {
-  const [preset, setPreset] = useState("month");
+interface ReportsDashboardProps {
+  sales: Sale[];
+  onReprintSale?: (sale: Sale) => void;
+}
+
+export default function ReportsDashboard({ sales, onReprintSale }: ReportsDashboardProps) {
+  const [preset, setPreset] = useState<DatePresetId | "custom">("month");
   const [customStart, setCustomStart] = useState("");
   const [customEnd, setCustomEnd] = useState("");
 
@@ -171,7 +185,7 @@ export default function ReportsDashboard({ sales, onReprintSale }) {
             <tbody className="divide-y divide-gray-200 text-sm">
               {filteredSales.length === 0 ? (
                 <tr>
-                  <td colSpan="7" className="px-6 py-8 text-center text-gray-500">
+                  <td colSpan={7} className="px-6 py-8 text-center text-gray-500">
                     No sales found in the selected range.
                   </td>
                 </tr>

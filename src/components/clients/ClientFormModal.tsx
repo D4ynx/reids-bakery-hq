@@ -1,13 +1,22 @@
 import React, { useState } from "react";
+import type { FormEvent } from "react";
+import type { Client, ClientFormData } from "../../types/domain";
 
-export default function ClientFormModal({ initial, onClose, onSave }) {
-  const [form, setForm] = useState(
+interface ClientFormModalProps {
+  initial: Client | null;
+  onClose: () => void;
+  onSave: (data: ClientFormData) => void;
+}
+
+export default function ClientFormModal({ initial, onClose, onSave }: ClientFormModalProps) {
+  const [form, setForm] = useState<ClientFormData>(
     initial || { name: "", contact: "", email: "", address: "", standingOrder: "" }
   );
 
-  const update = (field, value) => setForm((prev) => ({ ...prev, [field]: value }));
+  const update = (field: keyof ClientFormData, value: string) =>
+    setForm((prev) => ({ ...prev, [field]: value }));
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (!form.name) return;
     onSave(form);

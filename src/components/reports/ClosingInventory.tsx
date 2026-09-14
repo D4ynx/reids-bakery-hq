@@ -13,8 +13,15 @@ import {
   computeClosingInventory,
   closingInventoryToCSV,
 } from "../../utils/closingInventory";
+import type {
+  ClosingInventoryRow,
+  IngredientStock,
+  InventoryCount,
+  ISODate,
+  MenuItemStock,
+} from "../../types/domain";
 
-const pillCls = (active) =>
+const pillCls = (active: boolean) =>
   `px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
     active ? "bg-[#562D07] text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
   }`;
@@ -22,7 +29,17 @@ const pillCls = (active) =>
 const navBtnCls =
   "px-3 py-1.5 rounded-md border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors";
 
-function StatCard({ label, value, accent, sub }) {
+function StatCard({
+  label,
+  value,
+  accent,
+  sub,
+}: {
+  label: string;
+  value: string | number;
+  accent?: string;
+  sub?: string;
+}) {
   return (
     <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
       <p className="text-gray-500 text-xs md:text-sm font-medium mb-1">{label}</p>
@@ -32,7 +49,7 @@ function StatCard({ label, value, accent, sub }) {
   );
 }
 
-function DiscrepancyBadge({ row }) {
+function DiscrepancyBadge({ row }: { row: ClosingInventoryRow }) {
   if (!row.periodCountCount) {
     return <span className="text-gray-300">—</span>;
   }
@@ -49,7 +66,15 @@ function DiscrepancyBadge({ row }) {
   );
 }
 
-function ClosingSection({ title, rows, emptyText }) {
+function ClosingSection({
+  title,
+  rows,
+  emptyText,
+}: {
+  title: string;
+  rows: ClosingInventoryRow[];
+  emptyText: string;
+}) {
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden mb-6">
       <div className="p-5 border-b border-gray-100">
@@ -74,7 +99,7 @@ function ClosingSection({ title, rows, emptyText }) {
           <tbody className="divide-y divide-gray-200 text-sm">
             {rows.length === 0 ? (
               <tr>
-                <td colSpan="8" className="px-6 py-8 text-center text-gray-500">
+                <td colSpan={8} className="px-6 py-8 text-center text-gray-500">
                   {emptyText}
                 </td>
               </tr>
@@ -113,9 +138,15 @@ function ClosingSection({ title, rows, emptyText }) {
   );
 }
 
-export default function ClosingInventory({ menuInventory, ingredients, inventoryCounts }) {
-  const [view, setView] = useState("week"); // "week" | "month"
-  const [weekAnchor, setWeekAnchor] = useState(todayISO());
+interface ClosingInventoryProps {
+  menuInventory: MenuItemStock[];
+  ingredients: IngredientStock[];
+  inventoryCounts: InventoryCount[];
+}
+
+export default function ClosingInventory({ menuInventory, ingredients, inventoryCounts }: ClosingInventoryProps) {
+  const [view, setView] = useState<"week" | "month">("week");
+  const [weekAnchor, setWeekAnchor] = useState<ISODate>(todayISO());
   const [monthKey, setMonthKey] = useState(monthKeyOf(todayISO()));
 
   const period = useMemo(

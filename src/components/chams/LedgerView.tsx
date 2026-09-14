@@ -1,8 +1,23 @@
 import React from "react";
 import { formatMonthLabel, shiftMonthKey, buildLedgerForMonth, computeBranchProfitForMonth } from "../../utils/ledger";
 import { discrepancyLabel } from "../../utils/counts";
+import type {
+  ChamsBeginning,
+  ChamsBranch,
+  ChamsCount,
+  ChamsMovement,
+  ChamsProduct,
+} from "../../types/domain";
 
-export default function LedgerView({ branches, products, beginnings, movements, counts, month, onMonthChange }) {
+export default function LedgerView({ branches, products, beginnings, movements, counts, month, onMonthChange }: {
+  branches: ChamsBranch[];
+  products: ChamsProduct[];
+  beginnings: ChamsBeginning[];
+  movements: ChamsMovement[];
+  counts: ChamsCount[];
+  month: string;
+  onMonthChange: (month: string) => void;
+}) {
   const rows = buildLedgerForMonth(branches, products, month, beginnings, movements, counts).sort(
     (a, b) => a.branchName.localeCompare(b.branchName) || a.productName.localeCompare(b.productName)
   );
@@ -127,7 +142,7 @@ export default function LedgerView({ branches, products, beginnings, movements, 
                       </span>
                     ) : r.flagged ? (
                       <span className="text-xs font-bold text-red-600 bg-red-100 px-2 py-1 rounded-full">
-                        {discrepancyLabel(r.discrepancy)}
+                        {discrepancyLabel(r.discrepancy as number)}
                       </span>
                     ) : (
                       <span className="text-xs font-bold text-green-600 bg-green-100 px-2 py-1 rounded-full">

@@ -1,15 +1,24 @@
 import React, { useState } from "react";
+import type { FormEvent } from "react";
+import type { IngredientStock, IngredientId, ISODate, RestockReminder, RestockReminderData } from "../../types/domain";
 
-export default function RestockReminders({ ingredients, reminders, onAdd, onToggleDone }) {
-  const [form, setForm] = useState({
+interface RestockRemindersProps {
+  ingredients: IngredientStock[];
+  reminders: RestockReminder[];
+  onAdd: (data: RestockReminderData) => void;
+  onToggleDone: (id: string) => void;
+}
+
+export default function RestockReminders({ ingredients, reminders, onAdd, onToggleDone }: RestockRemindersProps) {
+  const [form, setForm] = useState<{ ingredientId: IngredientId; note: string; dueDate: ISODate | "" }>({
     ingredientId: ingredients[0]?.id || "",
     note: "",
     dueDate: "",
   });
 
-  const ingredientName = (id) => ingredients.find((i) => i.id === id)?.name || id;
+  const ingredientName = (id: IngredientId) => ingredients.find((i) => i.id === id)?.name || id;
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (!form.ingredientId || !form.dueDate) return;
     onAdd(form);

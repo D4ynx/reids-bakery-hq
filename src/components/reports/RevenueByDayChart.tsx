@@ -1,6 +1,7 @@
 import React, { useState } from "react";
+import type { ISODate, RevenueByDay } from "../../types/domain";
 
-function niceCeil(value) {
+function niceCeil(value: number) {
   if (value <= 0) return 100;
   const exponent = Math.floor(Math.log10(value));
   const magnitude = Math.pow(10, exponent);
@@ -13,7 +14,7 @@ function niceCeil(value) {
   return niceResidual * magnitude;
 }
 
-function formatShortDate(dateStr) {
+function formatShortDate(dateStr: ISODate) {
   const d = new Date(`${dateStr}T00:00:00`);
   return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
@@ -21,8 +22,8 @@ function formatShortDate(dateStr) {
 const CHART_HEIGHT = 200;
 const GRID_STEPS = 4;
 
-export default function RevenueByDayChart({ data }) {
-  const [hoverIdx, setHoverIdx] = useState(null);
+export default function RevenueByDayChart({ data }: { data: RevenueByDay[] }) {
+  const [hoverIdx, setHoverIdx] = useState<number | null>(null);
 
   if (data.length === 0) {
     return (

@@ -1,16 +1,38 @@
 import React, { useState } from "react";
 import { discrepancyLabel } from "../../utils/counts";
+import type {
+  CountResolutionAction,
+  IngredientStock,
+  InventoryCount,
+  MenuItemStock,
+} from "../../types/domain";
 
 const FILTERS = [
   { key: "flagged", label: "Flagged" },
   { key: "all", label: "All" },
   { key: "resolved", label: "Resolved" },
-];
+] as const;
 
-export default function ReconciliationReview({ counts, menuInventory, ingredients, onResolve, onApplyAll }) {
-  const [filter, setFilter] = useState("flagged");
+type ReconciliationFilter = (typeof FILTERS)[number]["key"];
 
-  const itemName = (c) => {
+interface ReconciliationReviewProps {
+  counts: InventoryCount[];
+  menuInventory: MenuItemStock[];
+  ingredients: IngredientStock[];
+  onResolve: (id: string, action: CountResolutionAction) => void;
+  onApplyAll: () => void;
+}
+
+export default function ReconciliationReview({
+  counts,
+  menuInventory,
+  ingredients,
+  onResolve,
+  onApplyAll,
+}: ReconciliationReviewProps) {
+  const [filter, setFilter] = useState<ReconciliationFilter>("flagged");
+
+  const itemName = (c: InventoryCount) => {
     const list = c.itemType === "ingredient" ? ingredients : menuInventory;
     return list.find((i) => i.id === c.itemId)?.name || c.itemId;
   };
@@ -101,7 +123,7 @@ export default function ReconciliationReview({ counts, menuInventory, ingredient
             <tbody className="divide-y divide-gray-200 text-sm">
               {sorted.length === 0 ? (
                 <tr>
-                  <td colSpan="8" className="px-6 py-8 text-center text-gray-500">
+                  <td colSpan={8} className="px-6 py-8 text-center text-gray-500">
                     {filter === "flagged" ? "No flagged discrepancies right now." : "No records in this view."}
                   </td>
                 </tr>

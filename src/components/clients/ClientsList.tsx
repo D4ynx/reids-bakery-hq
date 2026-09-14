@@ -1,15 +1,28 @@
 import React, { useState } from "react";
 import ClientFormModal from "./ClientFormModal";
+import type { ChangeEvent } from "react";
+import type { Client, ClientFormData, ClientId, Order } from "../../types/domain";
 
-export default function ClientsList({ clients, orders, onAdd, onUpdate, onView }) {
+interface ClientsListProps {
+  clients: Client[];
+  orders: Order[];
+  onAdd: (data: ClientFormData) => void;
+  onUpdate: (id: ClientId, data: Partial<ClientFormData>) => void;
+  onView: (client: Client) => void;
+}
+
+export default function ClientsList({ clients, orders, onAdd, onUpdate, onView }: ClientsListProps) {
   const [search, setSearch] = useState("");
-  const [modalState, setModalState] = useState({ isOpen: false, editing: null });
+  const [modalState, setModalState] = useState<{ isOpen: boolean; editing: Client | null }>({
+    isOpen: false,
+    editing: null,
+  });
 
   const filtered = clients.filter((c) => c.name.toLowerCase().includes(search.toLowerCase()));
 
-  const orderCount = (clientId) => orders.filter((o) => o.clientId === clientId).length;
+  const orderCount = (clientId: ClientId) => orders.filter((o) => o.clientId === clientId).length;
 
-  const handleSave = (data) => {
+  const handleSave = (data: ClientFormData) => {
     if (modalState.editing) onUpdate(modalState.editing.id, data);
     else onAdd(data);
   };
@@ -74,7 +87,7 @@ export default function ClientsList({ clients, orders, onAdd, onUpdate, onView }
             <tbody className="divide-y divide-gray-200 text-sm">
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan="5" className="px-6 py-8 text-center text-gray-500">
+                  <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
                     No clients found.
                   </td>
                 </tr>

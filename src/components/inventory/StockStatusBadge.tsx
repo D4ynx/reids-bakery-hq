@@ -1,5 +1,6 @@
 import React from "react";
 import { getStockStatus } from "../../utils/stock";
+import type { StockItem } from "../../types/domain";
 
 const STYLES = {
   out: "bg-red-50 text-red-600",
@@ -7,7 +8,7 @@ const STYLES = {
   ok: "bg-[#562D07]/10 text-[#562D07]",
 };
 
-export default function StockStatusBadge({ item }) {
+export default function StockStatusBadge({ item }: { item: StockItem }) {
   const status = getStockStatus(item);
   let text = "In Stock";
   if (status === "out") text = "Out of Stock";

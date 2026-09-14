@@ -1,5 +1,22 @@
 import React from "react";
 import { computeRecipeCost, suggestedPrice } from "../../utils/pricing";
+import type {
+  IngredientStock,
+  MenuItemStock,
+  PricingRuleInput,
+  PricingRules,
+  Recipe,
+} from "../../types/domain";
+
+interface RecipesListProps {
+  recipes: Recipe[];
+  ingredients: IngredientStock[];
+  menuInventory: MenuItemStock[];
+  pricingRules: PricingRules;
+  onEditRule: (data: PricingRuleInput) => void;
+  onEdit: (recipe: Recipe) => void;
+  onCreate: () => void;
+}
 
 export default function RecipesList({
   recipes,
@@ -9,7 +26,7 @@ export default function RecipesList({
   onEditRule,
   onEdit,
   onCreate,
-}) {
+}: RecipesListProps) {
   return (
     <div className="max-w-6xl mx-auto animate-fadeIn pb-10 w-full">
       <header className="mb-6 md:mb-8 flex flex-col md:flex-row md:justify-between md:items-end gap-4">
@@ -62,7 +79,7 @@ export default function RecipesList({
             <tbody className="divide-y divide-gray-200 text-sm">
               {recipes.length === 0 ? (
                 <tr>
-                  <td colSpan="7" className="px-6 py-8 text-center text-gray-500">
+                  <td colSpan={7} className="px-6 py-8 text-center text-gray-500">
                     No recipes yet. Create one to see live COGS and pricing.
                   </td>
                 </tr>
@@ -72,7 +89,7 @@ export default function RecipesList({
                   const price = suggestedPrice(costPerUnit, pricingRules.targetMarginPercent);
                   const menuItem = menuInventory.find((m) => m.id === recipe.menuItemId);
                   const actualPrice = menuItem?.price;
-                  const delta = typeof actualPrice === "number" ? actualPrice - price : null;
+                  const delta = typeof actualPrice === "number" ? actualPrice - price : 0;
                   return (
                     <tr key={recipe.id} className="hover:bg-gray-50/50 transition-colors">
                       <td className="px-6 py-4 font-medium text-gray-900">{recipe.name}</td>

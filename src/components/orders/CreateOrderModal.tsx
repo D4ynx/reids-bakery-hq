@@ -1,18 +1,27 @@
 import React, { useState } from "react";
+import type { FormEvent } from "react";
+import type { Client, CreateOrderData, MenuItemStock } from "../../types/domain";
 
 const today = () => new Date().toISOString().slice(0, 10);
 const emptyLine = () => ({ menuItemId: "", qty: "" });
 
-export default function CreateOrderModal({ clients, menuInventory, onClose, onCreate }) {
+interface CreateOrderModalProps {
+  clients: Client[];
+  menuInventory: MenuItemStock[];
+  onClose: () => void;
+  onCreate: (data: CreateOrderData) => void;
+}
+
+export default function CreateOrderModal({ clients, menuInventory, onClose, onCreate }: CreateOrderModalProps) {
   const [clientId, setClientId] = useState(clients[0]?.id || "");
   const [requestedDate, setRequestedDate] = useState(today());
   const [notes, setNotes] = useState("");
-  const [items, setItems] = useState([emptyLine()]);
+  const [items, setItems] = useState<Array<{ menuItemId: string; qty: string }>>([emptyLine()]);
 
-  const updateLine = (idx, field, value) =>
+  const updateLine = (idx: number, field: "menuItemId" | "qty", value: string) =>
     setItems((prev) => prev.map((line, i) => (i === idx ? { ...line, [field]: value } : line)));
   const addLine = () => setItems((prev) => [...prev, emptyLine()]);
-  const removeLine = (idx) => setItems((prev) => prev.filter((_, i) => i !== idx));
+  const removeLine = (idx: number) => setItems((prev) => prev.filter((_, i) => i !== idx));
 
   const cleanItems = items
     .filter((l) => l.menuItemId && l.qty)
@@ -26,7 +35,7 @@ export default function CreateOrderModal({ clients, menuInventory, onClose, onCr
     });
   const total = cleanItems.reduce((sum, l) => sum + l.qty * l.unitPrice, 0);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (!clientId || !requestedDate || cleanItems.length === 0) return;
     onCreate({ clientId, requestedDate, notes, items: cleanItems });

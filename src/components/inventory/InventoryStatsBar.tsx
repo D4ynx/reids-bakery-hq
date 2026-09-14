@@ -1,5 +1,6 @@
 import React from "react";
 import { getStockStatus } from "../../utils/stock";
+import type { StockItem, StockStatus } from "../../types/domain";
 
 const CARD_STYLES = {
   all: {
@@ -45,15 +46,21 @@ const CARD_STYLES = {
   },
 };
 
-export default function InventoryStatsBar({ items, activeFilter, onFilterChange }) {
-  const counts = { all: items.length, ok: 0, low: 0, out: 0 };
+interface InventoryStatsBarProps {
+  items: StockItem[];
+  activeFilter: "all" | StockStatus;
+  onFilterChange: (filter: "all" | StockStatus) => void;
+}
+
+export default function InventoryStatsBar({ items, activeFilter, onFilterChange }: InventoryStatsBarProps) {
+  const counts: Record<"all" | StockStatus, number> = { all: items.length, ok: 0, low: 0, out: 0 };
   items.forEach((item) => {
     counts[getStockStatus(item)] += 1;
   });
 
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6">
-      {["all", "ok", "low", "out"].map((key) => {
+      {(["all", "ok", "low", "out"] as const).map((key) => {
         const style = CARD_STYLES[key];
         const isActive = activeFilter === key;
         return (

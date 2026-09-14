@@ -1,8 +1,30 @@
 import React, { useState } from "react";
+import type { FormEvent } from "react";
+import type {
+  ClosingCountEntry,
+  ClosingCountSubmission,
+  IngredientStock,
+  InventoryItemCategory,
+  MenuItemStock,
+} from "../../types/domain";
 
 const today = () => new Date().toISOString().slice(0, 10);
 
-function CountSection({ title, icon, items, counts, onUpdate }) {
+type CountMap = Record<string, string>;
+
+function CountSection({
+  title,
+  icon,
+  items,
+  counts,
+  onUpdate,
+}: {
+  title: string;
+  icon: string;
+  items: (MenuItemStock | IngredientStock)[];
+  counts: CountMap;
+  onUpdate: (id: string, value: string) => void;
+}) {
   return (
     <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 mb-6">
       <h3 className="text-base font-bold text-[#121212] mb-4">
@@ -21,7 +43,7 @@ function CountSection({ title, icon, items, counts, onUpdate }) {
             {items.map((item) => (
               <tr key={item.id}>
                 <td className="px-4 py-3 font-medium text-gray-900">{item.name}</td>
-                <td className="px-4 py-3 text-gray-500">{item.unit || "pcs"}</td>
+                <td className="px-4 py-3 text-gray-500">{("unit" in item && item.unit) || "pcs"}</td>
                 <td className="px-4 py-3 text-right">
                   <input
                     type="number"
@@ -42,32 +64,39 @@ function CountSection({ title, icon, items, counts, onUpdate }) {
   );
 }
 
-export default function ClosingCountForm({ menuInventory, ingredients, onSubmit }) {
+interface ClosingCountFormProps {
+  menuInventory: MenuItemStock[];
+  ingredients: IngredientStock[];
+  onSubmit: (submission: ClosingCountSubmission) => void;
+}
+
+export default function ClosingCountForm({ menuInventory, ingredients, onSubmit }: ClosingCountFormProps) {
   const [date, setDate] = useState(today());
-  const [menuCounts, setMenuCounts] = useState({});
-  const [ingredientCounts, setIngredientCounts] = useState({});
+  const [menuCounts, setMenuCounts] = useState<CountMap>({});
+  const [ingredientCounts, setIngredientCounts] = useState<CountMap>({});
   const [submittedMsg, setSubmittedMsg] = useState("");
 
-  const updateMenuCount = (id, value) => setMenuCounts((prev) => ({ ...prev, [id]: value }));
-  const updateIngredientCount = (id, value) => setIngredientCounts((prev) => ({ ...prev, [id]: value }));
+  const updateMenuCount = (id: string, value: string) => setMenuCounts((prev) => ({ ...prev, [id]: value }));
+  const updateIngredientCount = (id: string, value: string) =>
+    setIngredientCounts((prev) => ({ ...prev, [id]: value }));
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
 
-    const menuEntries = menuInventory
+    const menuEntries: ClosingCountEntry[] = menuInventory
       .filter((item) => menuCounts[item.id] !== undefined && menuCounts[item.id] !== "")
       .map((item) => ({
         itemId: item.id,
-        itemType: "menu",
+        itemType: "menu" as InventoryItemCategory,
         systemQty: item.qty,
         countedQty: parseFloat(menuCounts[item.id]) || 0,
       }));
 
-    const ingredientEntries = ingredients
+    const ingredientEntries: ClosingCountEntry[] = ingredients
       .filter((item) => ingredientCounts[item.id] !== undefined && ingredientCounts[item.id] !== "")
       .map((item) => ({
         itemId: item.id,
-        itemType: "ingredient",
+        itemType: "ingredient" as InventoryItemCategory,
         systemQty: item.qty,
         countedQty: parseFloat(ingredientCounts[item.id]) || 0,
       }));

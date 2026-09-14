@@ -1,12 +1,30 @@
 import React, { useMemo, useState } from "react";
 import { computeDailyClosing } from "../../utils/closing";
 import { getRevenueByPaymentMethod } from "../../utils/sales";
+import type { FormEvent } from "react";
+import type { DayClosing, Expense, ExpenseData, ExpenseId, Sale, DayClosingData } from "../../types/domain";
 
 function todayISO() {
   return new Date().toISOString().slice(0, 10);
 }
 
-export default function EndOfDayClosing({ sales, expenses, dayClosings, onAddExpense, onDeleteExpense, onCloseDay }) {
+interface EndOfDayClosingProps {
+  sales: Sale[];
+  expenses: Expense[];
+  dayClosings: DayClosing[];
+  onAddExpense: (data: ExpenseData) => void;
+  onDeleteExpense: (id: ExpenseId) => void;
+  onCloseDay: (data: DayClosingData) => void;
+}
+
+export default function EndOfDayClosing({
+  sales,
+  expenses,
+  dayClosings,
+  onAddExpense,
+  onDeleteExpense,
+  onCloseDay,
+}: EndOfDayClosingProps) {
   const [date, setDate] = useState(todayISO());
   const [description, setDescription] = useState("");
   const [amount, setAmount] = useState("");
@@ -15,7 +33,7 @@ export default function EndOfDayClosing({ sales, expenses, dayClosings, onAddExp
   const alreadyClosed = dayClosings.find((c) => c.date === date);
   const paymentBreakdown = useMemo(() => getRevenueByPaymentMethod(closing.daySales), [closing.daySales]);
 
-  const handleAddExpense = (e) => {
+  const handleAddExpense = (e: FormEvent) => {
     e.preventDefault();
     const parsed = parseFloat(amount);
     if (!description.trim() || isNaN(parsed) || parsed <= 0) return;

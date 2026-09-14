@@ -3,14 +3,24 @@ import CreateOrderModal from "./CreateOrderModal";
 import OrderStatusBadge from "./OrderStatusBadge";
 import PaymentStatusBadge from "./PaymentStatusBadge";
 import { computeOrderTotal, getPaymentStatus, hasShortfall, ORDER_STATUSES } from "../../utils/orders";
+import type { Client, CreateOrderData, MenuItemStock, Order, OrderStatus } from "../../types/domain";
 
-export default function OrdersList({ orders, clients, menuInventory, onCreate, onView }) {
+interface OrdersListProps {
+  orders: Order[];
+  clients: Client[];
+  menuInventory: MenuItemStock[];
+  onCreate: (data: CreateOrderData) => void;
+  onView: (order: Order) => void;
+}
+
+export default function OrdersList({ orders, clients, menuInventory, onCreate, onView }: OrdersListProps) {
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("All");
+  const [statusFilter, setStatusFilter] = useState<OrderStatus | "All">("All");
   const [dateFilter, setDateFilter] = useState("");
   const [isCreating, setIsCreating] = useState(false);
 
-  const clientName = (order) => clients.find((c) => c.id === order.clientId)?.name || order.customerName || "—";
+  const clientName = (order: Order) =>
+    clients.find((c) => c.id === order.clientId)?.name || order.customerName || "—";
 
   const filtered = orders.filter((order) => {
     const matchStatus = statusFilter === "All" || order.status === statusFilter;
@@ -22,7 +32,7 @@ export default function OrdersList({ orders, clients, menuInventory, onCreate, o
     return matchStatus && matchDate && matchSearch;
   });
 
-  const handleCreate = (data) => {
+  const handleCreate = (data: CreateOrderData) => {
     onCreate(data);
     setIsCreating(false);
   };
@@ -107,7 +117,7 @@ export default function OrdersList({ orders, clients, menuInventory, onCreate, o
       </div>
 
       <div className="flex overflow-x-auto hide-scrollbar gap-2 mb-6">
-        {["All", ...ORDER_STATUSES].map((tab) => {
+        {(["All", ...ORDER_STATUSES] as Array<OrderStatus | "All">).map((tab) => {
           const count = tab === "All" ? orders.length : orders.filter((o) => o.status === tab).length;
           return (
             <button
@@ -143,7 +153,7 @@ export default function OrdersList({ orders, clients, menuInventory, onCreate, o
             <tbody className="divide-y divide-gray-200 text-sm">
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan="8" className="px-6 py-8 text-center text-gray-500">
+                  <td colSpan={8} className="px-6 py-8 text-center text-gray-500">
                     No orders found matching the selected filters.
                   </td>
                 </tr>
