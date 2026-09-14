@@ -23,6 +23,7 @@ import { useProduction } from "./hooks/useProduction";
 import { useOrders } from "./hooks/useOrders";
 import { useClosing } from "./hooks/useClosing";
 import { usePos } from "./hooks/usePos";
+import type { NavTabId, Order } from "./types/domain";
 
 export default function BakeryCommandCenter() {
   // --- NAVIGATION (src/hooks/useNavigation.ts) ---
@@ -167,7 +168,7 @@ export default function BakeryCommandCenter() {
   );
 
   // --- NAVIGATION HANDLERS (compose navigation + feature-owned resets) ---
-  const handleNavClick = (tab) => {
+  const handleNavClick = (tab: NavTabId) => {
     setActiveTab(tab);
     clearViewingOrder();
     clearViewingClient();
@@ -177,7 +178,7 @@ export default function BakeryCommandCenter() {
     setIsTabletSidebarOpen(false);
   };
 
-  const handleViewOrder = (order) => {
+  const handleViewOrder = (order: Order) => {
     setActiveTab("orders");
     setViewingOrder(order);
   };
@@ -197,7 +198,7 @@ export default function BakeryCommandCenter() {
         <ChamsStockLedger onSwitchView={() => setActiveView("reids")} />
       ) : (
         <>
-      {/* RESTOCK MODAL (extracted to src/components/inventory/RestockModal.jsx) */}
+      {/* RESTOCK MODAL (extracted to src/components/inventory/RestockModal.tsx) */}
       {restockModal.isOpen && (
         <RestockModal
           modal={restockModal}
@@ -211,7 +212,7 @@ export default function BakeryCommandCenter() {
         />
       )}
 
-      {/* ORDER CONFIRMATION MODAL (extracted to src/components/pos/OrderConfirmationModal.jsx) */}
+      {/* ORDER CONFIRMATION MODAL (extracted to src/components/pos/OrderConfirmationModal.tsx) */}
       {confirmModal.isOpen && (
         <OrderConfirmationModal
           modal={confirmModal}
@@ -225,7 +226,7 @@ export default function BakeryCommandCenter() {
         />
       )}
 
-      {/* RECEIPT MODAL (extracted to src/components/pos/ReceiptModal.jsx) */}
+      {/* RECEIPT MODAL (extracted to src/components/pos/ReceiptModal.tsx) */}
       {receipt && (
         <ReceiptModal receipt={receipt} onClose={() => setReceipt(null)} />
       )}
@@ -236,7 +237,7 @@ export default function BakeryCommandCenter() {
         onSwitchView={() => setActiveView("chams")}
       />
 
-      {/* SIDEBAR (extracted to src/components/layout/Sidebar.jsx) */}
+      {/* SIDEBAR (extracted to src/components/layout/Sidebar.tsx) */}
       <Sidebar
         activeTab={activeTab}
         windowWidth={windowWidth}
