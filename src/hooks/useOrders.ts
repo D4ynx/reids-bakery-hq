@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { initialOrders } from "../data/initialOrders";
 import type {
+  ClientId,
   CreateOrderData,
   Order,
   OrderDeliveryInput,
@@ -10,6 +11,34 @@ import type {
   OrderStatus,
   Sale,
 } from "../types/domain";
+
+// Monotonic order-number counter. Seeds past the highest seeded order so new
+// IDs never collide with the initial data (or with each other after deletes).
+let nextOrderSeq = 1048 + initialOrders.length;
+const nextOrderId = (): OrderId => `#${nextOrderSeq++}`;
+
+/** Shared order construction for createOrder / createOrderFromSale. */
+const buildOrder = (
+  id: OrderId,
+  data: Omit<CreateOrderData, "clientId"> & {
+    clientId: ClientId | null;
+    customerName?: string;
+  }
+): Order => ({
+  id,
+  clientId: data.clientId,
+  customerName: data.customerName,
+  items: data.items,
+  requestedDate: data.requestedDate,
+  status: "Pending",
+  notes: data.notes,
+  deliveryDate: null,
+  assignedTo: null,
+  createdAt: new Date().toISOString().slice(0, 10),
+  deliveredAt: null,
+  paymentMethod: null,
+  amountPaid: 0,
+});
 
 interface UseOrdersOptions {
   /**
@@ -29,48 +58,29 @@ export function useOrders({ deductOrderLines }: UseOrdersOptions) {
   const [viewingOrder, setViewingOrder] = useState<Order | null>(null);
 
   const createOrder = (data: CreateOrderData) => {
-    const today = new Date().toISOString().slice(0, 10);
-    setOrders((prev) => [
-      {
-        id: `#${1048 + prev.length}`,
-        clientId: data.clientId,
-        items: data.items,
-        requestedDate: data.requestedDate,
-        status: "Pending",
-        notes: data.notes,
-        deliveryDate: null,
-        assignedTo: null,
-        createdAt: today,
-        deliveredAt: null,
-        paymentMethod: null,
-        amountPaid: 0,
-      },
-      ...prev,
-    ]);
+    setOrders((prev) => [buildOrder(nextOrderId(), data), ...prev]);
   };
 
   const createOrderFromSale = (sale: Sale) => {
     const today = new Date().toISOString().slice(0, 10);
+    const order: Order = buildOrder(nextOrderId(), {
+      clientId: null,
+      customerName: sale.customerName,
+      items: sale.items.map((item) => ({
+        menuItemId: item.id,
+        name: item.name,
+        qty: item.qty,
+        unitPrice: item.price,
+      })),
+      requestedDate: today,
+      notes: sale.notes
+        ? `Placed via POS Pre-Order — ${sale.notes}`
+        : "Placed via POS Pre-Order",
+    });
     setOrders((prev) => [
       {
-        id: `#${1048 + prev.length}`,
-        clientId: null,
-        customerName: sale.customerName,
-        items: sale.items.map((item) => ({
-          menuItemId: item.id,
-          name: item.name,
-          qty: item.qty,
-          unitPrice: item.price,
-        })),
-        requestedDate: today,
-        status: "Pending",
-        notes: sale.notes
-          ? `Placed via POS Pre-Order — ${sale.notes}`
-          : "Placed via POS Pre-Order",
+        ...order,
         deliveryDate: sale.deliveryDate,
-        assignedTo: null,
-        createdAt: today,
-        deliveredAt: null,
         paymentMethod: sale.paymentMethod,
         amountPaid: sale.total,
       },
@@ -78,37 +88,40 @@ export function useOrders({ deductOrderLines }: UseOrdersOptions) {
     ]);
   };
 
+  /**
+   * Applies a patch to `orders`, mirroring it into `viewingOrder` if shown.
+   * The patch may be a plain object or a function of the current order so the
+   * two states can never drift apart.
+   */
+  const patchOrder = (
+    id: OrderId,
+    patch: Partial<Order> | ((order: Order) => Partial<Order>)
+  ) => {
+    const apply = (o: Order): Order => ({
+      ...o,
+      ...(typeof patch === "function" ? patch(o) : patch),
+    });
+    setOrders((prev) => prev.map((o) => (o.id === id ? apply(o) : o)));
+    setViewingOrder((prev) => (prev && prev.id === id ? apply(prev) : prev));
+  };
+
   const recordOrderPayment = (id: OrderId, { method, amount }: OrderPaymentInput) => {
-    setOrders((prev) =>
-      prev.map((o) =>
-        o.id === id
-          ? { ...o, paymentMethod: method, amountPaid: (o.amountPaid || 0) + amount }
-          : o
-      )
-    );
-    setViewingOrder((prev) =>
-      prev && prev.id === id
-        ? { ...prev, paymentMethod: method, amountPaid: (prev.amountPaid || 0) + amount }
-        : prev
-    );
+    patchOrder(id, (o) => ({
+      paymentMethod: method,
+      amountPaid: (o.amountPaid || 0) + amount,
+    }));
   };
 
   const advanceOrderStatus = (id: OrderId, status: OrderStatus | null) => {
     if (!status) return;
-    setOrders((prev) => prev.map((o) => (o.id === id ? { ...o, status } : o)));
-    setViewingOrder((prev) => (prev && prev.id === id ? { ...prev, status } : prev));
+    patchOrder(id, { status });
   };
 
   const scheduleOrderDelivery = (
     id: OrderId,
     { deliveryDate, assignedTo }: OrderDeliveryInput
   ) => {
-    setOrders((prev) =>
-      prev.map((o) => (o.id === id ? { ...o, deliveryDate, assignedTo } : o))
-    );
-    setViewingOrder((prev) =>
-      prev && prev.id === id ? { ...prev, deliveryDate, assignedTo } : prev
-    );
+    patchOrder(id, { deliveryDate, assignedTo });
   };
 
   const markOrderDelivered = (id: OrderId) => {
@@ -118,12 +131,7 @@ export function useOrders({ deductOrderLines }: UseOrdersOptions) {
 
     deductOrderLines(order.items);
 
-    setOrders((prev) =>
-      prev.map((o) => (o.id === id ? { ...o, status: "Delivered", deliveredAt } : o))
-    );
-    setViewingOrder((prev) =>
-      prev && prev.id === id ? { ...prev, status: "Delivered", deliveredAt } : prev
-    );
+    patchOrder(id, { status: "Delivered", deliveredAt });
   };
 
   const clearViewingOrder = () => setViewingOrder(null);

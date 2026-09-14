@@ -1,4 +1,5 @@
 import React from "react";
+import { CalendarIcon } from "../icons";
 
 interface CalendarViewProps {}
 
@@ -17,19 +18,7 @@ export default function CalendarView(_: CalendarViewProps) {
       <div className="flex-1 bg-white rounded-lg shadow-sm border border-[#F3B978] flex items-center justify-center p-4 md:p-8">
         <div className="text-center">
           <div className="w-16 h-16 md:w-20 md:h-20 bg-[#F3B978]/20 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg
-              className="w-8 h-8 md:w-10 md:h-10 text-[#F17D0C]"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-              />
-            </svg>
+            <CalendarIcon className="w-8 h-8 md:w-10 md:h-10 text-[#F17D0C]" />
           </div>
           <h3 className="text-lg md:text-xl font-bold text-[#562D07] mb-2">
             Calendar View Placeholder

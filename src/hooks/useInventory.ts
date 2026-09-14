@@ -6,17 +6,21 @@ import {
 } from "../data/initialInventory";
 import type {
   IngredientFormData,
+  IngredientId,
   IngredientStock,
   InventoryCount,
   InventoryItemCategory,
   MenuItemId,
   MenuItemStock,
   OrderItem,
+  Quantity,
   RecipeIngredientLine,
   RestockCategory,
   RestockModalState,
   RestockReminder,
   RestockReminderData,
+  RestockReminderId,
+  StockItem,
 } from "../types/domain";
 
 const EMPTY_RESTOCK_MODAL: RestockModalState = {
@@ -25,6 +29,16 @@ const EMPTY_RESTOCK_MODAL: RestockModalState = {
   selectedItemId: "",
   amountToAdd: "",
 };
+
+// Monotonic ID counters, seeded past the highest seeded record so new IDs keep
+// the display formats (ING-xx, RR-xxx) and never collide — even after deletes.
+let nextIngredientSeq = initialIngredients.length + 1;
+const nextIngredientId = (): IngredientId =>
+  `ING-${String(nextIngredientSeq++).padStart(2, "0")}`;
+
+let nextReminderSeq = initialRestockReminders.length + 1;
+const nextReminderId = (): RestockReminderId =>
+  `RR-${String(nextReminderSeq++).padStart(3, "0")}`;
 
 /**
  * Owns the inventory feature: menu item stock, raw ingredient stock, restock
@@ -71,41 +85,39 @@ export function useInventory() {
     );
   };
 
+  // Sets one stock item's qty in the collection matching the category.
+  const setQtyById = (
+    category: InventoryItemCategory,
+    id: string,
+    qty: (prev: Quantity) => Quantity
+  ) => {
+    const apply = <T extends StockItem>(item: T): T =>
+      item.id === id ? { ...item, qty: qty(item.qty) } : item;
+    if (category === "menu") {
+      setMenuInventory((prev) => prev.map(apply));
+    } else {
+      setIngredients((prev) => prev.map(apply));
+    }
+  };
+
   // Applies a resolved count to system stock (FR-4.5).
   const applyCountedQty = (
     itemType: InventoryItemCategory,
     itemId: string,
     countedQty: number
   ) => {
-    if (itemType === "ingredient") {
-      setIngredients((prev) =>
-        prev.map((item) => (item.id === itemId ? { ...item, qty: countedQty } : item))
-      );
-    } else {
-      setMenuInventory((prev) =>
-        prev.map((item) => (item.id === itemId ? { ...item, qty: countedQty } : item))
-      );
-    }
+    setQtyById(itemType, itemId, () => countedQty);
   };
 
   // Bulk-applies pending reconciliation counts (FR-4.5).
   const applyPendingCounts = (pending: InventoryCount[]) => {
-    setMenuInventory((prev) =>
-      prev.map((item) => {
-        const match = pending.find((c) => c.itemType === "menu" && c.itemId === item.id);
-        return match ? { ...item, qty: match.countedQty } : item;
-      })
-    );
-    setIngredients((prev) =>
-      prev.map((item) => {
-        const match = pending.find((c) => c.itemType === "ingredient" && c.itemId === item.id);
-        return match ? { ...item, qty: match.countedQty } : item;
-      })
-    );
+    pending.forEach((count) => {
+      setQtyById(count.itemType, count.itemId, () => count.countedQty);
+    });
   };
 
   // --- RESTOCKING (FR-1.2) ---
-  const handleOpenRestock = (category: RestockCategory, itemId = "") => {
+  const openRestock = (category: RestockCategory, itemId = "") => {
     const defaultId =
       itemId || (category === "menu" ? menuInventory[0].id : ingredients[0].id);
     setRestockModal({
@@ -120,33 +132,9 @@ export function useInventory() {
     const amount = parseInt(restockModal.amountToAdd);
     if (isNaN(amount) || amount <= 0) return;
 
-    if (restockModal.category === "menu") {
-      setMenuInventory((prev) =>
-        prev.map((item) =>
-          item.id === restockModal.selectedItemId
-            ? { ...item, qty: item.qty + amount }
-            : item
-        )
-      );
-    } else {
-      setIngredients((prev) =>
-        prev.map((item) =>
-          item.id === restockModal.selectedItemId
-            ? { ...item, qty: item.qty + amount }
-            : item
-        )
-      );
-    }
+    setQtyById(restockModal.category, restockModal.selectedItemId, (qty) => qty + amount);
 
     setRestockModal(EMPTY_RESTOCK_MODAL);
-  };
-
-  const handleRestockItemChange = (itemId: string) => {
-    setRestockModal({ ...restockModal, selectedItemId: itemId });
-  };
-
-  const handleRestockAmountChange = (amount: string) => {
-    setRestockModal({ ...restockModal, amountToAdd: amount });
   };
 
   const handleRestockQuickAdd = (delta: number) => {
@@ -162,10 +150,9 @@ export function useInventory() {
 
   // --- INGREDIENTS & RESTOCK REMINDERS (FR-1.2) ---
   const addIngredient = (data: IngredientFormData) => {
-    const nextNum = ingredients.length + 1;
     setIngredients((prev) => [
       ...prev,
-      { id: `ING-${String(nextNum).padStart(2, "0")}`, type: "Ingredient", ...data },
+      { id: nextIngredientId(), type: "Ingredient", ...data },
     ]);
   };
 
@@ -178,7 +165,7 @@ export function useInventory() {
   const addRestockReminder = (data: RestockReminderData) => {
     setRestockReminders((prev) => [
       ...prev,
-      { id: `RR-${String(prev.length + 1).padStart(3, "0")}`, done: false, ...data },
+      { id: nextReminderId(), done: false, ...data },
     ]);
   };
 
@@ -199,13 +186,12 @@ export function useInventory() {
     ingredients,
     restockReminders,
     restockModal,
+    setRestockModal,
     addIngredient,
     updateIngredient,
     addRestockReminder,
     toggleReminderDone,
-    handleOpenRestock,
-    handleRestockItemChange,
-    handleRestockAmountChange,
+    openRestock,
     handleRestockQuickAdd,
     closeRestockModal,
     submitRestock,

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import ClientFormModal from "./ClientFormModal";
-import type { ChangeEvent } from "react";
+import { SearchIcon } from "../icons";
 import type { Client, ClientFormData, ClientId, Order } from "../../types/domain";
 
 interface ClientsListProps {
@@ -53,14 +53,7 @@ export default function ClientsList({ clients, orders, onAdd, onUpdate, onView }
       <div className="bg-white border border-gray-200 rounded-lg p-2 mb-4 shadow-sm flex">
         <div className="relative flex-1 w-full">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-              />
-            </svg>
+            <SearchIcon className="h-5 w-5 text-gray-400" />
           </div>
           <input
             type="text"

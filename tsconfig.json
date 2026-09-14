@@ -12,9 +12,8 @@
         "skipLibCheck": true,
         "types": ["vite/client"],
         "lib": [
-            "dom",
-            "es2015",
-            "es2017.string"
+            "ES2020",
+            "DOM"
         ],
         "jsx": "react-jsx",
         "noEmit": true

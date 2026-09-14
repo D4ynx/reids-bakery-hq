@@ -1,5 +1,6 @@
 import React from "react";
 import OrderStatusBadge from "../orders/OrderStatusBadge";
+import { CalendarIcon } from "../icons";
 import { computeOrderTotal } from "../../utils/orders";
 import type { Client, NavTabId, Order, Quantity } from "../../types/domain";
 
@@ -40,19 +41,7 @@ export default function DashboardView({
           </p>
         </div>
         <div className="bg-white px-4 py-2 rounded-lg border border-gray-200 shadow-sm flex items-center text-sm font-medium text-gray-600">
-          <svg
-            className="w-4 h-4 mr-2 text-[#F17D0C]"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-            />
-          </svg>
+          <CalendarIcon className="w-4 h-4 mr-2 text-[#F17D0C]" />
           May 20, 2026
         </div>
       </header>

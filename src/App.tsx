@@ -27,7 +27,6 @@ import type { NavTabId, Order } from "./types/domain";
 
 export default function BakeryCommandCenter() {
   // --- NAVIGATION (src/hooks/useNavigation.ts) ---
-  const navigation = useNavigation();
   const {
     activeView,
     setActiveView,
@@ -42,7 +41,7 @@ export default function BakeryCommandCenter() {
     isReportsExpanded,
     setIsReportsExpanded,
     windowWidth,
-  } = navigation;
+  } = useNavigation();
 
   // --- INVENTORY (src/hooks/useInventory.ts) ---
   const inventory = useInventory();
@@ -51,13 +50,12 @@ export default function BakeryCommandCenter() {
     ingredients,
     restockReminders,
     restockModal,
+    setRestockModal,
     addIngredient,
     updateIngredient,
     addRestockReminder,
     toggleReminderDone,
-    handleOpenRestock,
-    handleRestockItemChange,
-    handleRestockAmountChange,
+    openRestock,
     handleRestockQuickAdd,
     closeRestockModal,
     submitRestock,
@@ -203,8 +201,12 @@ export default function BakeryCommandCenter() {
         <RestockModal
           modal={restockModal}
           items={restockItems}
-          onItemChange={handleRestockItemChange}
-          onAmountChange={handleRestockAmountChange}
+          onItemChange={(itemId) =>
+            setRestockModal({ ...restockModal, selectedItemId: itemId })
+          }
+          onAmountChange={(amount) =>
+            setRestockModal({ ...restockModal, amountToAdd: amount })
+          }
           onQuickAdd={handleRestockQuickAdd}
           onClose={closeRestockModal}
           onConfirm={submitRestock}
@@ -354,7 +356,7 @@ export default function BakeryCommandCenter() {
             restockReminders={restockReminders}
             inventoryCounts={inventoryCounts}
             onRestockToProduction={goToProductionRuns}
-            onOpenRestock={handleOpenRestock}
+            onOpenRestock={openRestock}
             onAddIngredient={addIngredient}
             onUpdateIngredient={updateIngredient}
             onAddReminder={addRestockReminder}
