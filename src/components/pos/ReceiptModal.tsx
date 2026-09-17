@@ -110,7 +110,13 @@ export default function ReceiptModal({ receipt, onClose }: ReceiptModalProps) {
             Exit
           </button>
           <button
-            onClick={() => window.print()}
+            onClick={async () => {
+              // Lazy-load jsPDF so it stays out of the initial bundle.
+              const { downloadReceiptPdf } = await import(
+                "../../utils/receiptPdf"
+              );
+              downloadReceiptPdf(receipt);
+            }}
             className="flex-1 py-3 rounded-xl text-white font-bold bg-[#F17D0C] hover:bg-[#d86b06] transition-colors"
           >
             Download Receipt
