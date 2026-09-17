@@ -257,7 +257,7 @@ export default function BakeryCommandCenter() {
 
       {/* MAIN CONTENT AREA */}
       <main
-        className={`flex-1 relative z-10 w-full flex flex-col ${
+        className={`flex-1 relative z-10 w-full flex flex-col lg:pl-20 ${
           activeTab === "pos"
             ? "p-0 overflow-hidden bg-gray-100"
             : "p-4 md:p-8 overflow-y-auto"

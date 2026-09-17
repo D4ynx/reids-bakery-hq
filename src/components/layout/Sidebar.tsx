@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { AppView, NavTabId } from "../../types/domain";
 import type { Dispatch, SetStateAction } from "react";
 
@@ -15,6 +16,9 @@ interface SidebarProps {
   onNavClick: (tab: NavTabId) => void;
   onSwitchView: (view: AppView) => void;
 }
+
+/** Width (px) of the collapsed sidebar rail = desktop hover zone (Tailwind w-20). */
+const COLLAPSED_RAIL_PX = 80;
 
 export default function Sidebar({
   activeTab,
@@ -36,11 +40,22 @@ export default function Sidebar({
   const isTablet = windowWidth >= 768 && windowWidth < 1024;
   const sidebarExpanded = isTablet && isTabletSidebarOpen;
 
+  // Desktop (lg+): expand ONLY while the cursor is within the collapsed rail's
+  // 80px width. Hovering the expanded part of the rail collapses it again, so
+  // the rail can never "trap" the cursor and cover content sitting right next
+  // to it (e.g. the POS category chips near the left edge).
+  const isDesktop = windowWidth >= 1024;
+  const [isDesktopRailHovered, setIsDesktopRailHovered] = useState(false);
+  const desktopRailExpanded = isDesktop && isDesktopRailHovered;
+
   // Shared class for sidebar labels/chevrons: visible while the tablet rail is
-  // expanded (click) or on desktop hover; hidden on the collapsed tablet rail.
+  // expanded (click), while the desktop rail is hover-expanded, or on desktop
+  // hover; hidden on the collapsed tablet rail.
   const sidebarLabelCls = sidebarExpanded
     ? "opacity-100"
-    : "opacity-100 md:opacity-0 lg:group-hover:opacity-100";
+    : desktopRailExpanded
+      ? "opacity-100"
+      : "opacity-100 md:opacity-0 lg:opacity-0";
 
   return (
     <>
@@ -62,6 +77,14 @@ export default function Sidebar({
 
       {/* SIDEBAR */}
       <aside
+        onMouseMove={(e) => {
+          if (!isDesktop) return;
+          // Expand only while the cursor is inside the collapsed rail's 80px.
+          setIsDesktopRailHovered(e.clientX < COLLAPSED_RAIL_PX);
+        }}
+        onMouseLeave={() => {
+          if (isDesktop) setIsDesktopRailHovered(false);
+        }}
         onClick={(e) => {
           if (!isTablet) return;
           // When expanded, only bare spots toggle the rail — button taps keep working
@@ -69,13 +92,13 @@ export default function Sidebar({
           setIsTabletSidebarOpen((prev) => !prev);
         }}
         className={`
-        fixed md:relative inset-y-0 left-0 z-50 
+        fixed md:relative inset-y-0 left-0 z-50
         transform ${
           isMobileOpen ? "translate-x-0" : "-translate-x-full"
-        } md:translate-x-0 
-        w-64 ${sidebarExpanded ? "md:w-64" : "md:w-20"} lg:hover:w-64 
-        transition-all duration-300 ease-in-out 
-        bg-[#562D07] text-[#FDF9F3] flex flex-col shadow-2xl group
+        } md:translate-x-0
+        w-64 ${sidebarExpanded ? "md:w-64" : "md:w-20"} ${desktopRailExpanded ? "lg:w-64 lg:absolute" : "lg:w-20"}
+        transition-all duration-300 ease-in-out
+        bg-[#562D07] text-[#FDF9F3] flex flex-col shadow-2xl
       `}
       >
         {/* Brand Area */}
@@ -255,7 +278,7 @@ export default function Sidebar({
               <div
                 className={`mt-1 space-y-1 bg-[#4a2605] rounded-lg overflow-hidden transition-all shadow-inner ${
                   sidebarExpanded ? "md:block" : "md:hidden"
-                } md:group-hover:block`}
+                } ${desktopRailExpanded ? "lg:block" : "lg:hidden"}`}
               >
                 <button
                   onClick={() => onNavClick("inventory-menu")}
@@ -419,7 +442,7 @@ export default function Sidebar({
               <div
                 className={`mt-1 space-y-1 bg-[#4a2605] rounded-lg overflow-hidden transition-all shadow-inner ${
                   sidebarExpanded ? "md:block" : "md:hidden"
-                } md:group-hover:block`}
+                } ${desktopRailExpanded ? "lg:block" : "lg:hidden"}`}
               >
                 <button
                   onClick={() => onNavClick("reports-dashboard")}
