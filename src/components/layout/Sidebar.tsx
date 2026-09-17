@@ -100,10 +100,10 @@ export default function Sidebar({
           desktopRailExpanded
             ? // Expanded = overlay so content never shifts; smooth 300ms growth
               "lg:w-64 lg:absolute"
-            : // Collapsed = snap back instantly (no lg transition) so the rail
-              // never lingers over the POS chips right after the cursor
-              // crosses the 80px line — keeps them immediately clickable
-              "lg:w-20 lg:transition-none"
+            : // Collapsed = quick 150ms ease-back so the rail doesn't linger
+              // over the POS chips after the cursor crosses the 80px line,
+              // while still animating smoothly instead of snapping shut
+              "lg:w-20 lg:duration-150"
         }
         transition-all duration-300 ease-in-out
         bg-[#562D07] text-[#FDF9F3] flex flex-col shadow-2xl
