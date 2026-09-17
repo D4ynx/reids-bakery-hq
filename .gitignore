@@ -1,21 +1,20 @@
-# dependencies
-node_modules/
+# Python / Django
+backend/venv/
+backend/__pycache__/
+backend/*/__pycache__/
+backend/*/*/__pycache__/
+backend/**/*.pyc
+backend/.env
+backend/db.sqlite3
+backend/staticfiles/
+backend/media/
 
-# production build
-build/
-dist/
+# Node / React (if not already covered by frontend/.gitignore)
+frontend/node_modules/
+frontend/dist/
+frontend/.env
 
-# env files
-.env
-.env.local
-.env.*.local
-
-# logs
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# editor/OS
+# General
 .DS_Store
-.vscode/
 *.log
+.vscode/
