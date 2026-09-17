@@ -113,7 +113,7 @@ export default function ReceiptModal({ receipt, onClose }: ReceiptModalProps) {
             onClick={() => window.print()}
             className="flex-1 py-3 rounded-xl text-white font-bold bg-[#F17D0C] hover:bg-[#d86b06] transition-colors"
           >
-            Print Receipt
+            Download Receipt
           </button>
         </div>
       </div>
