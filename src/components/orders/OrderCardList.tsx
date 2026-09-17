@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { createPortal } from "react-dom";
 import OrderStatusBadge from "./OrderStatusBadge";
 import PaymentStatusBadge from "./PaymentStatusBadge";
 import { computeOrderTotal, getPaymentStatus, hasShortfall } from "../../utils/orders";
@@ -41,8 +42,9 @@ export default function OrderCardList({ orders, menuInventory, getClientName, on
 
   return (
     <>
-      {/* Standalone sort control — replaces desktop column-header sort triggers. */}
-      <div className="@max-lg:flex @max-lg:items-center @max-lg:justify-between @max-lg:gap-2 @max-lg:mb-3 @lg:hidden">
+      {/* Standalone sort control — replaces desktop column-header sort triggers.
+          Arbitrary container widths: Tailwind v4's @lg container size is 512px, not 1024px. */}
+      <div className="@max-[1024px]:flex @max-[1024px]:items-center @max-[1024px]:justify-between @max-[1024px]:gap-2 @max-[1024px]:mb-3 @min-[1024px]:hidden">
         <label htmlFor="orders-mobile-sort" className="text-sm font-medium text-gray-500 whitespace-nowrap">
           Sort by
         </label>
@@ -58,7 +60,7 @@ export default function OrderCardList({ orders, menuInventory, getClientName, on
         </select>
       </div>
 
-      <div className="hidden @max-lg:grid gap-3">
+      <div className="hidden @max-[1024px]:grid gap-3">
         {sorted.length === 0 ? (
           <p className="px-4 py-8 text-center text-gray-500 bg-white rounded-lg border border-gray-200">
             No orders found matching the selected filters.
@@ -227,8 +229,14 @@ interface OrderBottomSheetProps {
 }
 
 function OrderBottomSheet({ order, clientName, menuInventory, onClose, onOpenFull }: OrderBottomSheetProps) {
-  return (
-    <div className="hidden @max-lg:block fixed inset-0 z-50">
+  // Portal to <body>: container-type: inline-size on the @container ancestor
+  // applies layout containment, which makes it the containing block for
+  // position:fixed descendants. Without the portal the sheet would be trapped
+  // inside the container instead of covering the viewport.
+  return createPortal(
+    // Viewport media query, not a container query: the sheet is portalled to
+    // <body>, which is not a container, so @max-[1024px]: would never match.
+    <div className="hidden max-lg:block fixed inset-0 z-50">
       <div className="absolute inset-0 bg-black/40" onClick={onClose} aria-hidden="true" />
       <div
         role="dialog"
@@ -325,6 +333,7 @@ function OrderBottomSheet({ order, clientName, menuInventory, onClose, onOpenFul
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
