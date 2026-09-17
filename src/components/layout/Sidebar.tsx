@@ -110,7 +110,7 @@ export default function Sidebar({
       `}
       >
         {/* Brand Area */}
-        <div className="p-5 border-b border-[#F3B978]/20 flex justify-between items-center whitespace-nowrap md:h-[76px]">
+        <div className="p-5 border-b border-[#F3B978]/20 flex justify-between items-center whitespace-nowrap md:h-[76px] overflow-hidden">
           <button
             onClick={() => onSwitchView("chams")}
             className="flex items-center"
