@@ -36,20 +36,22 @@ type RecipeEditorForm = Omit<RecipeInput, "yieldQty" | "ingredients" | "price" |
 
 export default function RecipeEditor({ recipe, ingredients, pricingRules, onCancel, onSave }: RecipeEditorProps) {
   const isNew = !recipe;
-  const [form, setForm] = useState<RecipeEditorForm>(
-    recipe || {
-      id: null,
-      name: "",
-      type: "Menu Item",
-      category: "Pastries",
-      price: "",
-      qty: "",
-      target: "",
-      shelfLife: "",
-      yieldQty: "",
-      yieldUnit: "pcs",
-      ingredients: [],
-    }
+  const [form, setForm] = useState<RecipeEditorForm>(() =>
+    recipe
+      ? { ...recipe, yieldQty: recipe.yieldQty ?? "", yieldUnit: recipe.yieldUnit ?? "pcs" }
+      : {
+          id: null,
+          name: "",
+          type: "Menu Item",
+          category: "Pastries",
+          price: "",
+          qty: "",
+          target: "",
+          shelfLife: "",
+          yieldQty: "",
+          yieldUnit: "pcs",
+          ingredients: [],
+        }
   );
 
   const [marginTiers, setMarginTiers] = useState<Array<number | "">>(() => {
