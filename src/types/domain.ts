@@ -47,6 +47,8 @@ export type CountResolution = "match" | "applied" | "dismissed";
 /** Reconciliation action on a flagged count. */
 export type CountResolutionAction = "apply" | "dismiss";
 export type PosCategory = "All" | "Pastries" | "Bread" | "Cakes" | "Drinks";
+/** A single item's category — excludes the "All" filter-only value. */
+export type PosItemCategory = Exclude<PosCategory, "All">;
 
 // ---------- Inventory ----------
 export interface MenuItemStock {
@@ -198,12 +200,10 @@ export interface RecipeIngredientLine {
   unit: string;
 }
 
-export interface Recipe {
-  id: RecipeId;
-  menuItemId: MenuItemId;
-  name: string;
-  yieldQty: number;
-  yieldUnit: string;
+export interface Recipe extends MenuItemStock {
+  category: PosItemCategory;
+  yieldQty?: number;
+  yieldUnit?: string;
   ingredients: RecipeIngredientLine[];
 }
 
