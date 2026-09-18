@@ -87,7 +87,7 @@ export default function RecipesList({
                 recipes.map((recipe) => {
                   const { costPerUnit } = computeRecipeCost(recipe, ingredients);
                   const price = suggestedPrice(costPerUnit, pricingRules.targetMarginPercent);
-                  const menuItem = menuInventory.find((m) => m.id === recipe.menuItemId);
+                  const menuItem = menuInventory.find((m) => m.id === recipe.id);
                   const actualPrice = menuItem?.price;
                   const delta = typeof actualPrice === "number" ? actualPrice - price : 0;
                   return (
