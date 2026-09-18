@@ -108,6 +108,7 @@ export default function RecipeEditor({ recipe, ingredients, pricingRules, onCanc
       .map((l) => ({ ...l, qty: parseFloat(String(l.qty)) || 0 }));
     const hasBom = cleanIngredients.length > 0;
     if (hasBom && (!form.yieldQty || !form.yieldUnit)) return;
+    const hasYield = form.yieldQty !== "" && !!form.yieldUnit;
 
     onSave({
       id: form.id,
@@ -118,8 +119,8 @@ export default function RecipeEditor({ recipe, ingredients, pricingRules, onCanc
       qty: parseFloat(String(form.qty)) || 0,
       target: parseFloat(String(form.target)) || 0,
       shelfLife: form.shelfLife,
-      yieldQty: hasBom ? parseFloat(String(form.yieldQty)) || 0 : undefined,
-      yieldUnit: hasBom ? form.yieldUnit : undefined,
+      yieldQty: hasYield ? parseFloat(String(form.yieldQty)) || 0 : undefined,
+      yieldUnit: hasYield ? form.yieldUnit : undefined,
       ingredients: cleanIngredients,
     });
   };
